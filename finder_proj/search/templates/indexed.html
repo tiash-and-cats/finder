@@ -1,0 +1,26 @@
+{% extends "master.html" %}
+{% load humanize %}
+
+{% block title %}
+   Currently indexed pages
+{% endblock title %}
+
+{% block content %}
+   <div class="topnav">
+     <a href="/">Back</a>
+   </div>
+   
+   <h1>Currently indexed pages</h1>
+   <p>I have indexed {{ total|intcomma }} pages... and counting!</p>
+     
+   {% for x in indexed %}
+      <div class="indexed page box">
+          <h3 class="title"><a href="{{ x.url }}">{{ x.title }}</a> <small>(rank: {{ x.rank|intcomma }})</small></h3>
+		  <p class="url">{{ x.url }}</p>
+          <p class="desc">{{ x.desc }}</p>
+          <p class="keywords">{{ x.keywds }}</p>
+   	      <p class="content">{{ x.content }}...</samp>
+      </div>
+   {% endfor %}
+
+{% endblock content %}

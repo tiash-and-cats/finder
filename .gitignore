@@ -1,0 +1,6 @@
+env
+*/__pycache__ 
+finder_proj/db.sqlite3
+bare
+.git-broken
+bare-broken

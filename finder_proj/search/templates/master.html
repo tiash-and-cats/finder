@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+   {% load static %}
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+   <link rel="stylesheet" href="{% static 'styles.css' %}">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   {% now "m-d" as today_md %}
+   {% if today_md == "06-21" %}
+      <link rel="icon" href='{% static "lgog_favicon.png" %}'>
+   {% else %}
+      <link rel="icon" href='{% static "favicon.png" %}'>
+   {% endif %}
+   <title>Finder - {% block title %}{% endblock title %}</title>
+   {% block head %}{% endblock head %}
+</head>
+<body>
+
+{% block content %}
+{% endblock content %}
+
+{% block scripts %}
+{% endblock scripts %}
+
+</body>
+</html>

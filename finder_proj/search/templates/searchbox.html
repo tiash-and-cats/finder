@@ -1,0 +1,33 @@
+{{ common|json_script:"suggestions-data" }}
+
+<script>
+  const raw = JSON.parse(document.getElementById("suggestions-data").textContent);
+  const input = document.getElementById("{{ id }}");
+  const datalist = document.getElementById("{{ datalist_id }}");
+  
+  input.addEventListener("input", () => {
+    const val = input.value.toLowerCase();
+    datalist.innerHTML = "";
+    
+    let matches;
+    if (val !== "") {
+      matches = raw.filter(q => q.startsWith(val)).slice(0, 10);
+    } else {
+      matches = raw.slice(0, 10);
+    }
+    
+    console.log(matches);
+    
+    fillOpt(matches);
+  });
+  
+  function fillOpt(matches) {
+    for (let text of matches) {
+      const opt = document.createElement("option");
+      opt.value = text;
+      datalist.appendChild(opt);
+    }
+  }
+  
+  fillOpt(raw.slice(0, 10))
+</script>

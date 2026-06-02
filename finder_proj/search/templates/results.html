@@ -1,0 +1,62 @@
+{% extends "master.html" %}
+{% load humanize %}
+{% load search_ext %}
+{% load searchbox %}
+{% load static %}
+
+{% block title %}
+   Search results for {{ query }}
+{% endblock title %}
+
+{% block content %}
+   <div class="topnav">
+     <a href='{% url "search:search" %}'>
+	    {% now "m-d" as today_md %}
+        {% if today_md == "06-21" %}
+             <img src='{% static "lgog.png" %}' alt="Happy Lgog Day!" width="57.61px">
+        {% else %}
+             <img src='{% static "logo.png" %}' alt="Finder Logo" width="57.61px">
+        {% endif %}
+	    {#<b>Finder!</b>#}
+     </a>
+     <div class="search-container">
+       <form action="/search/">
+         <input type="text" value="{{ query }}" placeholder="Search.." name="q" autocomplete="off" list="common" id="search">
+		 <datalist id="common"></datalist>
+         <button type="submit"><i class="fa fa-search"></i></button>
+       </form>
+     </div>
+   </div>
+   
+   <p>{{ total|intcomma }} pages found</p>
+   
+   {% extensions_html query as ext %}
+   {% if ext.ext_match %}
+      <div class="box" id="ext">
+          {{ ext.ext_html|safe }}
+      </div>
+	  <hr>
+   {% endif %}
+      
+   {% for x in results %}
+	  <div class="page box">
+          <h3 class="title" style="--favicon: url('{{ x.favicon }}')"><a href="{{ x.url }}">{{ x.title }}</a></h3>
+		  <p class="url">{{ x.url }}</p>
+          <p class="desc">{{ x.desc }}</p>
+   	      <p class="content">{{ x.content }}...</p>
+      </div>
+   {% empty %}
+      <p>I'm sorry, but I don't have any results for you :(.</p>
+   {% endfor %}
+
+{% endblock content %}
+
+{% block scripts %}
+   {% searchbox_js "search" "common" common %}
+   {% extensions_js query as js %}
+   {% if js %}
+       <script>
+           {{ js|safe }}
+       </script>
+   {% endif %}
+{% endblock scripts %}

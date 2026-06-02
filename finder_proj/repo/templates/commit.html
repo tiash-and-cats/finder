@@ -1,0 +1,88 @@
+{% extends "master.html" %}
+{% load humanize %}
+
+{% block title %}Commit {{ commit.hexsha|slice:":7" }}{% endblock %}
+
+{% block head %}
+<style>
+body {
+  font-family: Arial, sans-serif;
+}
+
+h1.commit-title {
+  font-size: 1.4rem;
+  margin-bottom: 0.2em;
+}
+
+.meta {
+  color: #666;
+  line-height: 1em;
+}
+
+summary {
+  font-size: 0.95rem;
+  padding-bottom: 0.2em;
+}
+
+pre {
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+ins, del {
+  display: inline-block;
+  width: 100%;
+  text-decoration: none;
+}
+
+ins {
+  background-color: #00ff0033;
+}
+
+del {
+  background-color: #ff000033;
+}
+
+.badge {
+  font-size: 0.7rem;
+  background: #eee;
+  color: #333;
+  padding: 0.1em 0.4em;
+  margin-left: 0.4em;
+  border-radius: 3px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topnav">
+  <a href="{% url 'repo:index' %}">Back</a>
+</div>
+
+<h1><code>{{ commit.hexsha|slice:":7" }}</code> — {{ commit.summary }}</h1>
+<aside class="meta">
+  <p><strong>Author:</strong> {{ commit.author.name }}</p>
+  <p><strong>Date:</strong> {{ commit.committed_datetime|naturaltime }}</p>
+  {% if branches %}
+    <p><strong>Branch{{ branches|length|pluralize }}:</strong>
+      {% for b in branches %}
+        <a href="{% url 'repo:branch' b %}"><code>{{ b }}</code></a>{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+</aside>
+
+{% if desc_html %}
+  <section class="commit-description">
+    {{ desc_html|safe }}
+  </section>
+{% endif %}
+
+{% for file in file_changes %}
+<details>
+  <summary><em>{{ file.change_type|capfirst }}:</em> <code>{{ file.path }}</code></summary>
+  <pre>{{ file.diff_html|safe }}</pre>
+</details>
+{% endfor %}
+{% endblock %}

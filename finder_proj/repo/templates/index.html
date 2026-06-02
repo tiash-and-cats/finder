@@ -1,0 +1,50 @@
+{% extends "master.html" %}
+{% load humanize %}
+
+{% block title %}Finder Repository{% endblock %}
+
+{% block content %}
+<div class="topnav">
+  <a href="/">Back</a>
+</div>
+
+<h1>Repository Dashboard</h1>
+
+<p style="line-height: 1.6;">
+  Welcome to Finder's internal change log—the commit log. We decided against writing a blog or a changelog by hand because frankly, that would be exhausting. Instead, this page pulls straight from the source: every commit made to Finder’s codebase, in chronological honesty.
+</p>
+
+<p style="line-height: 1.6;">
+  Finder uses Git for version control, and this interface is powered by the GitPython library. That means the history here is real—no curation, no sugar-coating. If something broke and got frantically patched five minutes later, you’ll see it. If the `.gitignore` mysteriously ate itself, yep, you’ll see that too.
+</p>
+
+<p style="line-height: 1.6;">
+  For commit-by-commit details, click into any entry. You’ll find diffs, descriptions, and the occasional quiet scream of a developer preserved in the commit message.
+</p>
+
+<h2 style="margin-top: 2em;">Branches</h2>
+<ul>
+  {% for b in branches %}
+    <li>
+      <a href="{% url 'repo:branch' b %}"><code>{{ b }}</code></a>
+    </li>
+  {% empty %}
+    <li>No branches found.</li>
+  {% endfor %}
+</ul>
+
+<h2 style="margin-top: 2em;">Recent Commits</h2>
+<ul>
+  {% for c in commits %}
+    <li style="margin-bottom: 1em;">
+      <code>{{ c.hexsha|slice:":7" }}</code> — 
+      <a href="{% url 'repo:commit' c.hexsha %}">{{ c.summary }}</a><br>
+      <small>by {{ c.author.name }} — {{ c.committed_datetime|naturaltime }}</small>
+    </li>
+  {% empty %}
+    <li>No commits found.</li>
+  {% endfor %}
+</ul>
+
+<p><a href="{% url 'repo:commit_list' %}">View full commit log →</a></p>
+{% endblock %}

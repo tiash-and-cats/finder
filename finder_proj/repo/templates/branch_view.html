@@ -1,0 +1,31 @@
+{% extends "master.html" %}
+{% block title %}Branch: {{ branch_name }} | Finder Repository{% endblock %}
+
+{% block content %}
+<div class="topnav">
+  <a href="{% url 'repo:index' %}">← Back to Repo Dashboard</a>
+</div>
+
+<h1><code>{{ branch_name }}</code> Branch</h1>
+
+<p style="line-height: 1.6;">
+  Below are the latest 20 commits made on the <strong>{{ branch_name }}</strong> branch. Each entry includes the commit hash, summary, author, and date. This page updates in real time with the Git history—no storytelling filters applied.
+</p>
+
+<ul style="padding-left: 0; list-style: none;">
+  {% for c in commits %}
+    <li style="margin-bottom: 1.5rem;">
+      <a href="{% url 'repo:commit' c.hash %}">
+        <code>{{ c.hash|slice:":7" }}</code>
+      </a> — {{ c.message }}<br>
+      <small>by {{ c.author }} on {{ c.date }}</small>
+    </li>
+  {% empty %}
+    <li>No commits found on this branch.</li>
+  {% endfor %}
+</ul>
+
+<p style="margin-top: 2rem;">
+  <a href="{% url 'repo:commit_list' %}">→ View full commit log</a>
+</p>
+{% endblock %}
