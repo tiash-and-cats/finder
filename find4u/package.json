@@ -1,0 +1,26 @@
+{
+  "name": "find4u",
+  "version": "1.0.0",
+  "description": "Find4U: Finder's very own AI chat! I hope it's not shoved in any faces.",
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "license": "MIT",
+  "author": "tiash-and-cats",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@openrouter/agent": "^0.7.0",
+    "ansi-colors": "^4.1.3",
+    "marked": "^15.0.12",
+    "marked-terminal": "^7.3.0",
+    "open": "^11.0.0"
+  },
+  "allowScripts": {
+    "@openrouter/sdk@0.12.79": true
+  }
+}

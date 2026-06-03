@@ -1,6 +1,7 @@
 env
-*/__pycache__ 
-finder_proj/db.sqlite3
+*.pyc
+db.sqlite3
+find4u/node_modules
+finder_proj/ai
 bare
-.git-broken
-bare-broken
+*.secret
