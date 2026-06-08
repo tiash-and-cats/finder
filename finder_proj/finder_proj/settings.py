@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from os import getenv, environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,11 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=+c9-ps08jyfng+pr#3p@3#qef2*jhw#i6*ujd99ia62m(3-%='
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(getenv("DJANGO_DEBUG"))) if "DJANGO_DEBUG" in environ else True
+
+# SECURITY WARNING: keep the secret key used in production secret!
+if DEBUG:
+    SECRET_KEY = 'django-insecure-=+c9-ps08jyfng+pr#3p@3#qef2*jhw#i6*ujd99ia62m(3-%='
+else:
+    SECRET_KEY = getenv("DJANGO_SECRET_KEY")
 
 ALLOWED_HOSTS = ["*", "[::]"]
 
@@ -48,6 +52,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Builtin helpful gremlins
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -55,6 +60,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # My helpful gremlins
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'finder_proj.urls'
@@ -134,3 +142,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GIT_PUSH_ENABLED = False # Specifies if `git push` requests to `/repo/repo.git` should be allowed
                          # Obviously False here, for security reasons, but you can change this to True if you so wish!
                          # Read commit de0f88f for more info about the security implications of setting this to True.
+
+STATIC_ROOT = BASE_DIR / 'staticprod'

@@ -1,7 +1,9 @@
 env
 *.pyc
 db.sqlite3
-find4u/node_modules
+find4u/cli/node_modules
+find4u/web/node_modules
 finder_proj/ai
+finder_proj/staticprod
 bare
 *.secret

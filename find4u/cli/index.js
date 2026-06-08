@@ -1,10 +1,14 @@
-import { OpenRouter } from '@openrouter/agent';
+import { OpenRouter, tool } from '@openrouter/agent';
 import { marked } from 'marked';
 import { markedTerminal } from 'marked-terminal';
+import { exec } from "child_process";
+import { z } from "zod";
+import os from "os";
 import colors from 'ansi-colors';
 import fs from "fs";
 import readline from "readline";
 import open from "open";
+import yoctoSpinner from 'yocto-spinner';
 
 function input(rl, prompt) {
   return new Promise(resolve => rl.question(prompt, resolve));
@@ -45,12 +49,51 @@ function formatDuration(duration) {
   return parts.join(" ");
 }
 
-async function chat(msgs, openrouter) {
+function runTerminalCommand(command) {
+  return new Promise((resolve) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        resolve([true, `Error: ${error.message}\nStderr: ${stderr}`]);
+      } else {
+        resolve([false, stdout || stderr || "Command completed successfully with no output."]);
+      }
+    });
+  });
+}
+
+async function chat(rl, msgs, openrouter) {
   try {
-    const result = openrouter.callModel({
+    const payload = {
       model: 'openrouter/free',
       input: msgs,
-    });
+      tools: [
+        tool({
+          name: "execute_command",
+          description: `Runs a specific ${os.platform() == "win32" ? "Windows command prompt" : "shell"} command on the host computer and returns the output.`,
+          inputSchema: z.object({
+            command: z.string().describe(`The exact ${os.platform() == "win32" ? "Windows command prompt" : "shell"} command to execute.`),
+          }),
+          execute: async ({ command }) => {
+            const confirmation = await input(rl, colors.bold(`Agent wants to execute command ${colors.blue(command)}, allow? (y/n) `));
+
+            if (confirmation.toLowerCase() === "y") {
+              process.stdout.write("\x1bM\r");
+              const spinner = yoctoSpinner({text: colors.italic.dim("Running: ") + colors.bold.blue(command)}).start();
+              const [error, output] = await runTerminalCommand(command);
+              if (error) {
+                spinner.error();
+              } else {
+                spinner.success();
+              }
+              return { output };
+            } else {
+              return { output: "Permission Denied: The user blocked execution of this command." };
+            }
+          },
+        }),
+      ],
+    };
+    const result = openrouter.callModel(payload);
     let full = "";
     for await (const delta of result.getTextStream()) {
       full += delta;
@@ -58,6 +101,7 @@ async function chat(msgs, openrouter) {
       process.stdout.write("\x1bc" + rendered);
     }
   } catch (e) {
+    if (!e.error) throw e;
     if (e.error.code === 429) {
       if (e.error.metadata.retry_after_seconds) {
         console.log(colors.bold.yellow(`Rate limited, trying again in ${
@@ -103,7 +147,7 @@ async function main() {
 
   while (true) {
     msgs.push({ role: "user", content: await input(rl, ">> ") });
-    await chat(msgs, openrouter);
+    await chat(rl, msgs, openrouter);
   }
 }
 

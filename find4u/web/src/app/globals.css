@@ -1,0 +1,30 @@
+* {box-sizing: border-box;}
+
+body {
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 0 20px;
+  font-family: verdana;
+}
+
+input, button {font-family: verdana}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+th, td {
+  padding: 8px;
+  border-inline: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.hljs {
+  padding: 10px;
+}

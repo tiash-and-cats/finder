@@ -1,28 +1,4 @@
-[Tue, 02 Jun 2026 23:11:39 GMT] Started crawl
-[Tue, 02 Jun 2026 23:11:39 GMT] parsed.path.rstrip("/"): 
-[Tue, 02 Jun 2026 23:11:40 GMT] parsed.path.rstrip("/"): /en
-[Tue, 02 Jun 2026 23:11:40 GMT] parsed.path.rstrip("/"): /hub/language
-[Tue, 02 Jun 2026 23:11:43 GMT] parsed.path.rstrip("/"): /covering-all-the-bases-duolingos-approach-to-listening-skills
-[Tue, 02 Jun 2026 23:11:44 GMT] parsed.path.rstrip("/"): /author/olivia
-[Tue, 02 Jun 2026 23:11:45 GMT] parsed.path.rstrip("/"): /how-culture-impacts-language-learning
-[Tue, 02 Jun 2026 23:11:45 GMT] parsed.path.rstrip("/"): /author/hope
-[Tue, 02 Jun 2026 23:11:46 GMT] parsed.path.rstrip("/"): 
-[Tue, 02 Jun 2026 23:11:47 GMT] parsed.path.rstrip("/"): /app/duolingo-learn-spanish-french/id570060128
-[Tue, 02 Jun 2026 23:11:50 GMT] parsed.path.rstrip("/"): /us/iphone/today
-[Tue, 02 Jun 2026 23:11:51 GMT] parsed.path.rstrip("/"): /us/ipad/today
-[Tue, 02 Jun 2026 23:11:53 GMT] parsed.path.rstrip("/"): /us/mac/discover
-[Tue, 02 Jun 2026 23:11:55 GMT] parsed.path.rstrip("/"): /us/vision/apps-and-games
-[Tue, 02 Jun 2026 23:11:58 GMT] parsed.path.rstrip("/"): /us/watch/apps-and-games
-[Tue, 02 Jun 2026 23:11:59 GMT] parsed.path.rstrip("/"): /us/tv/discover
-[Tue, 02 Jun 2026 23:12:01 GMT] parsed.path.rstrip("/"): /us/tv/games
-[Tue, 02 Jun 2026 23:12:02 GMT] parsed.path.rstrip("/"): /us/tv/apps
-[Tue, 02 Jun 2026 23:12:03 GMT] parsed.path.rstrip("/"): /us/tv/arcade
-[Tue, 02 Jun 2026 23:12:06 GMT] parsed.path.rstrip("/"): /us/app/crossy-road-castle/id1478978570
-[Tue, 02 Jun 2026 23:12:07 GMT] parsed.path.rstrip("/"): /us/iphone/games
-[Tue, 02 Jun 2026 23:12:10 GMT] parsed.path.rstrip("/"): /us/iphone/apps
-[Tue, 02 Jun 2026 23:12:12 GMT] parsed.path.rstrip("/"): /us/iphone/arcade
-[Tue, 02 Jun 2026 23:12:15 GMT] parsed.path.rstrip("/"): /us/iphone/story/id1896307343
-[Tue, 02 Jun 2026 23:12:16 GMT] parsed.path.rstrip("/"): /us/app/suika-game/id6741622025
-[Tue, 02 Jun 2026 23:12:18 GMT] parsed.path.rstrip("/"): /apple-arcade
-[Tue, 02 Jun 2026 23:12:20 GMT] parsed.path.rstrip("/"): /us/shop/goto/store
-[Tue, 02 Jun 2026 23:12:23 GMT] parsed.path.rstrip("/"): 
+[Thu, 04 Jun 2026 13:17:26 GMT] Started crawl
+[Thu, 04 Jun 2026 13:17:26 GMT] parsed.path.rstrip("/"): /nvgif/implementations
+[Thu, 04 Jun 2026 13:17:27 GMT] parsed.path.rstrip("/"): /nvgif
+[Thu, 04 Jun 2026 13:17:28 GMT] Ended crawl

@@ -1,0 +1,90 @@
+#chat {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 50px;
+}
+
+.msg {
+  border: 2px solid #dedede;
+  background-color: #f1f1f1;
+  border-radius: 16px 16px 0 16px;
+  padding: 10px;
+  margin: 10px 0;
+  max-width: max-content;
+  align-self: flex-end;
+  max-width: 800px;
+}
+
+.msg * {
+  word-wrap: break-word;        /* Legacy alias for older browsers */
+  overflow-wrap: anywhere;      /* Modern standard behavior */
+}
+
+.msg::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.msg p {
+  margin: 0;
+}
+
+#msgadd {
+  position: fixed;
+  bottom: 0;
+  z-index: 1;
+  background-color: white;
+  border-top: 2px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  height: 50px;
+  --padding: 10px;
+  --max-width: 820px;
+  
+  padding: var(--padding);
+  left: calc(50svw - ((min(100svw, var(--max-width)) + 2 * var(--padding)) / 2) + var(--padding));
+  width: min(100svw, var(--max-width));
+}
+
+#msgadd input[name="msg"] {
+  flex-grow: 1;
+  margin-right: 5px;
+  outline: none;
+  border-radius: 16px;
+  border: 2px solid #dedede;
+  padding: 4px;
+  padding-left: 8px;
+  font-size: 1rem;
+  min-width: 0;
+}
+
+#msgadd button[type="submit"] {
+  background-color: dodgerblue;
+  border-radius: 16px;
+  color: white;
+  border: none;
+  font-size: 1rem;
+}
+
+#msgadd button[type="submit"]:disabled {
+  opacity: 0.5;
+}
+
+#cta {
+  display: flex;
+  width: 100%;
+  min-height: calc(100svh - 50px);
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#cta p {
+  margin: 0.125rem;
+}
+
+#cta img {
+  margin-bottom: 0.5rem;
+}

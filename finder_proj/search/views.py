@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
 from django.db.models import Q
+from django.conf import settings
 from api.models import Indexed
 from .models import CommonSearch
 from shlex import split
@@ -76,6 +77,7 @@ def indexed(request):
 def search(request):
     template = loader.get_template('search.html')
     context = {
-      "common": list(CommonSearch.objects.order_by("-count").values_list("phrase", flat=True))[:100]
+      "common": list(CommonSearch.objects.order_by("-count").values_list("phrase", flat=True))[:100],
+      "prod": not settings.DEBUG
     }
     return HttpResponse(template.render(context, request))

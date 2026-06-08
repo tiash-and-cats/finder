@@ -11,13 +11,7 @@
 {% block content %}
    <div class="topnav">
      <a href='{% url "search:search" %}'>
-	    {% now "m-d" as today_md %}
-        {% if today_md == "06-21" %}
-             <img src='{% static "lgog.png" %}' alt="Happy Lgog Day!" width="57.61px">
-        {% else %}
-             <img src='{% static "logo.png" %}' alt="Finder Logo" width="57.61px">
-        {% endif %}
-	    {#<b>Finder!</b>#}
+      <img src='{% static "logo.svg" %}' alt="Finder Logo" width="76.813px">
      </a>
      <div class="search-container">
        <form action="/search/">

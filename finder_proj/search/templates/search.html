@@ -9,13 +9,7 @@
 {% block content %}
    <div class="fullscreen-search">
 	  <div>
-      {% now "m-d" as today_md %}
-      {% if today_md == "06-21" %}
-          <img src='{% static "lgog.png" %}' alt="Happy Lgog Day!" width="300px" style="margin-bottom: 10px;">
-      {% else %}
-          <img src='{% static "logo.png" %}' alt="Finder Logo" width="300px" style="margin-bottom: 10px;">
-      {% endif %}
-      {#<h1>Finder!</h1>#}
+      <img src='{% static "logo.svg" %}' alt="Finder Logo" width="300px" style="margin-bottom: 10px;">
       <form class="search" action='{% url "search:search_results" %}'>
         <input type="text" placeholder="Search.." name="q" autocomplete="off" list="common" id="search">
 	    <datalist id="common"></datalist>
@@ -24,6 +18,9 @@
    
       <p><a href="{% url 'search:all_indexed' %}">See every page I know about</a></p>
       <p><a href="{% url 'repo:index' %}">Check the repository dashboard for the latest info!</a></p>
+      {% if prod %}
+        <p><a href="/find4u">NEW! Use our Find4U AI to search like you talk (still learning, but fun!)</a></p>
+      {% endif %}
 	  </div>
    </div>
 {% endblock content %}
