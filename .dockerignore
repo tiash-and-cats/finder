@@ -4,7 +4,8 @@
 
 env
 *.pyc
-find4u/cli/node_modules
+*.secret
+find4u/cli
 find4u/web/node_modules
 finder_proj/ai
 finder_proj/repo

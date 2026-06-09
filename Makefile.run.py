@@ -10,9 +10,16 @@ from waitress import serve
 
 def reverse_proxy():
     sys.path.append("finder_proj")
+    os.environ["DJANGO_DEBUG"] = "0"
     from finder_proj.wsgi import application as finder_wsgi
     
-    find4u_popen = subprocess.Popen([shutil.which("npx"), "next", "start"], cwd="./find4u/web", env={**os.environ})
+    find4u_popen = subprocess.Popen(
+        [shutil.which("npx"), "next", "start"], cwd="./find4u/web",
+        env={
+            **os.environ,
+            "PORT": "3000"
+        }
+    )
     HOP_BY_HOP = {
         "connection",
         "keep-alive",
@@ -33,7 +40,7 @@ def reverse_proxy():
 
         url = f"http://localhost:3000{path}"
 
-        # Forward headers from Waitress → Next.js
+        # Forward headers from Waitress -> Next.js
         headers = {}
         for key, value in environ.items():
             if key.startswith("HTTP_"):

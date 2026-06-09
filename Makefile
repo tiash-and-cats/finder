@@ -22,7 +22,7 @@ deps:
 		$(SYS_PYTHON) -m venv env; \
 		$(VENV_BIN)/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu; \
 	fi
-	@if [ ! -d find4u/cli/node_modules ]; then \
+	@if [ ! -d find4u/cli/node_modules ] && [ -d find4u/cli ]; then \
 		cd find4u/cli; \
 		npm install; \
 	fi
@@ -53,7 +53,7 @@ run:
 		cd ..; \
 	fi
 	@# Run the Python runner
-	DJANGO_DEBUG=0 $(VENV_BIN)/python Makefile.run.py
+	$(VENV_BIN)/python Makefile.run.py
 
 Makefile.secret: | deps
 	$(VENV_BIN)/python build-Makefile.secret.py
