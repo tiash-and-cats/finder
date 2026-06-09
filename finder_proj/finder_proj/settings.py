@@ -47,8 +47,6 @@ INSTALLED_APPS = [
     "search",
     "api",
     "django.contrib.humanize",
-    #"ai",
-    "repo",
 ]
 
 MIDDLEWARE = [

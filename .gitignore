@@ -1,6 +1,6 @@
 env
 *.pyc
-db.sqlite3
+finder_proj/db.sqlite3
 find4u/cli/node_modules
 find4u/web/node_modules
 finder_proj/ai

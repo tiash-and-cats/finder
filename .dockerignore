@@ -1,0 +1,19 @@
+# Ignore VCS
+.git
+.gitignore
+
+env
+*.pyc
+find4u/cli/node_modules
+find4u/web/node_modules
+finder_proj/ai
+finder_proj/repo
+finder_proj/staticprod
+bare
+
+# Ignore OS junk
+*.swp
+*.tmp
+*.log
+.DS_Store
+Thumbs.db

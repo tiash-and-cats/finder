@@ -16,10 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('', include('search.urls')),
     path('admin/', admin.site.urls),
-    #path("ai/", include("ai.urls")),
-    path("repo/", include("repo.urls", namespace="repo")),
+    path('repo/', RedirectView.as_view(url='https://github.com/tiash-and-cats/finder/', permanent=True)),
 ]
