@@ -82,5 +82,5 @@ docker build -t <img name> .
 
 To run it, run:
 ``` sh
-docker run -p 80:80 -e DJANGO_SECRET_KEY="<your-secret-key>" -e OPENROUTER_KEY=\"<sk-or-v1-SECRET-KEY>\" finder
+docker run -p 80:80 -e DJANGO_SECRET_KEY="<your-secret-key>" -e OPENROUTER_KEY=\"<sk-or-v1-SECRET-KEY>\" <img name>
 ```
