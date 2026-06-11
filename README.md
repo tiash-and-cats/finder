@@ -12,6 +12,7 @@ with:
 
 - Node.js 26
 - Python 3.14
+- GMake
 
 installed. This will start the web server.
 
@@ -75,7 +76,7 @@ Running `make` runs `<path-to-venv-python>/python Makefile.run.py` (the exact pa
 
 A joint Finder and Find4U image is available at docker.io/tiashdev/finder:latest. This image does not utilize `Makefile.secret`; instead, the environment variables must be set manually. See your `Makefile.secret` for what variables to set or check the one earlier in this document.
 
-To build a Docker image, run:
+To build your own Docker image, run in the repo root:
 ``` sh
 docker build -t <img name> .
 ```
@@ -84,3 +85,5 @@ To run it, run:
 ``` sh
 docker run -p 80:80 -e DJANGO_SECRET_KEY="<your-secret-key>" -e OPENROUTER_KEY=\"<sk-or-v1-SECRET-KEY>\" <img name>
 ```
+
+Note that it copies your database (`db.sqlite3`) over to the container too.
