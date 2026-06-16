@@ -1,4 +1,4 @@
-default: deps run
+default: run
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN=./env/Scripts
@@ -26,31 +26,25 @@ deps:
 		cd find4u/cli; \
 		npm install; \
 	fi
+	@if [ ! -d find4u/cli/ink-app/node_modules ] && [ -d find4u/cli ]; then \
+		cd find4u/cli/ink-app; \
+		npm install; \
+	fi
 	@if [ ! -d find4u/web/node_modules ]; then \
 		cd find4u/web; \
 		npm install; \
 	fi
 
-finder:
+build: deps
+	cd find4u/web && npm run build
+	cd finder_proj && .$(VENV_BIN)/python manage.py migrate
+	cd finder_proj && .$(VENV_BIN)/python manage.py collectstatic --noinput
+	source $(VENV_BIN)/activate && cd docs && make html 
+
+run: deps
 	@if [ ! -f Makefile.secret ]; then \
 		echo "No Makefile.secret found: run make Makefile.secret"; \
 		exit 1; \
-	fi
-	( cd finder_proj; \
-	  DJANGO_DEBUG=1 $(VENV_BIN)/python manage.py runserver )
-
-find4u:
-	@# TODO
-
-run:
-	@if [ ! -f Makefile.secret ]; then \
-		echo "No Makefile.secret found: run make Makefile.secret"; \
-		exit 1; \
-	fi
-	@if [ ! -d finder_proj/staticprod ]; then \
-		cd finder_proj; \
-		.$(VENV_BIN)/python manage.py collectstatic --noinput; \
-		cd ..; \
 	fi
 	@# Run the Python runner
 	$(VENV_BIN)/python Makefile.run.py

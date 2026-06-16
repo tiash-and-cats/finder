@@ -16,9 +16,12 @@
   "dependencies": {
     "@openrouter/agent": "^0.7.0",
     "ansi-colors": "^4.1.3",
+    "figlet": "^1.11.0",
+    "gradient-string": "^3.0.0",
     "marked": "^15.0.12",
     "marked-terminal": "^7.3.0",
     "open": "^11.0.0",
+    "sharp": "^0.35.1",
     "yocto-spinner": "^1.2.0",
     "zod": "^4.4.3"
   },

@@ -12,12 +12,13 @@ export async function POST(req) {
   try {
     result = await openrouter.callModel({
       model: "openrouter/free",
+      instructions: "You are a helpful AI assistant called Find4U.",
       input: messages
     });
   } catch (e) {
     return new Response(e.error.message, {
       headers: { "Content-Type": "text/plain" },
-      code: e.error.code,
+      status: e.error.code,
     });
   }
 

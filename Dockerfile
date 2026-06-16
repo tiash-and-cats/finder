@@ -1,25 +1,22 @@
-FROM python:3.14-slim
-
-# Copy to working dir
-COPY . /app
-
-# Change to working directory
+# Stage 1: base with system deps
+FROM python:3.14-slim AS finder-base
 WORKDIR /app
 
-# Blank out Makefile.secret
-RUN echo "# Set your secrets manually via environment variables" > Makefile.secret
-
-# Install Node.js (for Find4U frontend)
-RUN apt-get update && apt-get install -y curl make \
+RUN apt-get update && apt-get install -y build-essential curl make \
     && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies and create venv
-RUN make deps SHELL=bash
+# Stage 2: final runtime
+FROM finder-base
+WORKDIR /app
 
-# Expose port 80
+COPY . .
+
 EXPOSE 80
 
-# Run Makefile (launches unified server)
-CMD ["make", "SHELL=bash"]
+RUN echo "# Set your secrets manually using environment variables" > Makefile.secret
+RUN make deps SHELL=bash
+
+# Let Makefile handle venv + deps + build
+CMD make build SHELL=bash && make SHELL=bash

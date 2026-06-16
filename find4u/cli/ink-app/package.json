@@ -1,0 +1,43 @@
+{
+  "name": "find4u-cli",
+  "version": "1.1.0",
+  "description": "Find4U CLI",
+  "keywords": [
+    "ai",
+    "automation",
+    "openrouter"
+  ],
+  "license": "MIT",
+  "author": "tiash-and-cats",
+  "type": "module",
+  "bin": {
+    "find4u-cli": "index.js"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "node gen-splash.js && babel src --out-dir ."
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.29.7",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "ansi-colors": "^4.1.3",
+    "gradient-string": "^3.0.0",
+    "figlet": "^1.11.0",
+    "sharp": "^0.35.1"
+  },
+  "dependencies": {
+    "@inkjs/ui": "^2.0.0",
+    "ink": "^7.0.5",
+    "inquirer": "^14.0.2",
+    "open": "^11.0.0",
+    "@openrouter/agent": "^0.7.0",
+    "zod": "^4.4.3",
+    "marked": "^15.0.12",
+    "marked-terminal": "^7.3.0"
+  },
+  "allowScripts": {
+    "@openrouter/sdk@0.12.79": true
+  }
+}

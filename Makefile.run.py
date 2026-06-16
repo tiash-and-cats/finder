@@ -6,6 +6,8 @@ import os
 import logging
 import urllib3
 import traceback
+import textwrap
+from whitenoise import WhiteNoise
 from waitress import serve
 
 def reverse_proxy():
@@ -31,6 +33,22 @@ def reverse_proxy():
         "transfer-encoding",  # Waitress can't handle chunked
     }
     http = urllib3.PoolManager(maxsize=20)
+    
+    def docs_wsgi(environ, start_response):
+        start_response("404 Not Found", [("Content-Type", "text/html; charset=utf-8")])
+        return [textwrap.dedent("""
+            <!doctype html>
+            <html>
+            <body>
+            
+            <h1>HTTP Error 404: Not Found</h1>
+            <p>The specified resource was not found on this server.</p>
+            
+            </body>
+            </html>
+        """).encode("utf-8")]
+        
+    docs_wsgi = WhiteNoise(docs_wsgi, prefix="docs/", root="./docs/build/html/")
 
     def find4u_wsgi(environ, start_response):
         path   = environ.get("PATH_INFO", "")
@@ -88,12 +106,29 @@ def reverse_proxy():
     def app(environ, start_response):
         path = environ.get('PATH_INFO', '')
         
-        # if the request targets /find4u, give it to find4u
-        if path.startswith('/find4u'):
-            return find4u_wsgi(environ, start_response)
+        # default to Finder
+        wsgi = finder_wsgi
         
-        # otherwise, fall back to Finder
-        return finder_wsgi(environ, start_response)
+        # if the request targets /find4u, give it to find4u
+        if path.startswith("/find4u"):
+            wsgi = find4u_wsgi
+            
+        # if the request targets /docs, redirect to /docs/
+        if path == "/docs":
+            def redirect(environ, start_response):
+                start_response("301 Moved Permanently", [("Location", "/docs/")])
+                return [b""]
+                
+            wsgi = redirect
+            
+        # if the request targets /docs/, give it to WhiteNoise
+        if path.startswith("/docs/"):
+            if environ["PATH_INFO"].endswith("/"):
+                environ["PATH_INFO"] += "index.html"
+                
+            wsgi = docs_wsgi
+        
+        return wsgi(environ, start_response)
     
     def close():
         find4u_popen.terminate()
@@ -110,7 +145,9 @@ def main():
     print("Listening on http://localhost, ^C to exit")
     try:
         serve(app, listen="*:80")
-    except:
+    except KeyboardInterrupt:
+        print("Exited")
+    finally:
         close()
 
 if __name__ == "__main__":

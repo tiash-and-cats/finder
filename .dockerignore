@@ -10,6 +10,7 @@ find4u/web/node_modules
 finder_proj/ai
 finder_proj/repo
 finder_proj/staticprod
+docs/build
 bare
 
 # Ignore OS junk

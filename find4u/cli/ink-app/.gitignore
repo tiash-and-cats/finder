@@ -1,0 +1,3 @@
+*.js
+!gen-splash.js
+!src/*.js
