@@ -22,11 +22,15 @@ deps:
 		$(SYS_PYTHON) -m venv env; \
 		$(VENV_BIN)/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu; \
 	fi
-	@if [ ! -d find4u/cli/node_modules ] && [ -d find4u/cli ]; then \
+	@if [ ! -d node_modules ]; then \
+		npm init --init-type module -y; \
+		npm install zod; \
+	fi
+	@if [ ! -d find4u/cli/node_modules ] && [ -d find4u/cli/ink-app/src ]; then \
 		cd find4u/cli; \
 		npm install; \
 	fi
-	@if [ ! -d find4u/cli/ink-app/node_modules ] && [ -d find4u/cli ]; then \
+	@if [ ! -d find4u/cli/ink-app/node_modules ] && [ -d find4u/cli/ink-app/src ]; then \
 		cd find4u/cli/ink-app; \
 		npm install; \
 	fi
@@ -41,7 +45,7 @@ build-find4u: deps
 build: deps
 	cd finder_proj && .$(VENV_BIN)/python manage.py migrate
 	cd finder_proj && .$(VENV_BIN)/python manage.py collectstatic --noinput
-	source $(VENV_BIN)/activate && cd docs && make html 
+	source $(VENV_BIN)/activate && cd docs && make
 
 run: deps
 	@if [ ! -f Makefile.secret ]; then \

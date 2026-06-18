@@ -7,7 +7,7 @@ function showAction(setMessages, content, type) {
   setMessages(prev => prev.toSpliced(-1, 0, { role: "action", type, content }));
 }
 
-export default function getTools(messages, setMessages) {
+function getFSTools(setMessages) {
   return [
     tool({
       name: 'read_file',
@@ -15,16 +15,16 @@ export default function getTools(messages, setMessages) {
       inputSchema: z.string().describe('The file path'),
       outputSchema: z.object({
         success: z.boolean().describe('Was the read successful?'),
-        content: z.string().describe('The file content')
+        content: z.string().describe('The file content, or, if unsuccessful, the error message')
       }),
       async execute(path) {
         try {
-          const ret = { success: true, content: await fs.readFile(path) };
+          const ret = { success: true, content: await fs.readFile(path, "utf8") };
           showAction(setMessages, `Read ${path}`, "success");
           return ret;
         } catch (e) {
           showAction(setMessages, `Failed to read ${path}`, "error");
-          return { success: false, content: "" };
+          return { success: false, content: e.message };
         }
       },
     }),
@@ -38,6 +38,9 @@ export default function getTools(messages, setMessages) {
       outputSchema: z.boolean().describe('Was the write successful?'),
       async execute(param) {
         try {
+          if (param.path.endsWith("find4u.config.json")) {
+            throw new Error("Find4U is prohibited from modifying find4u.config.json");
+          }
           await fs.writeFile(param.path, param.content, "utf8");
           showAction(setMessages, `Wrote to ${param.path}`, "success");
           return true;
@@ -47,5 +50,20 @@ export default function getTools(messages, setMessages) {
         }
       },
     })
-  ]
+  ];
+}
+
+export default function getTools(confTools, setMessages) {
+  const mapping = {
+    "fstools": getFSTools
+  };
+  const tools = [];
+  for (const tool of confTools) {
+    if (!Object.hasOwn(mapping, tool)) {
+      showAction(setMessages, `Tool ${tool} does not exist, skipping`, "warning");
+      continue;
+    }
+    tools.push(...mapping[tool](setMessages));
+  }
+  return tools;
 }

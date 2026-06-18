@@ -6,6 +6,8 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from pathlib import Path
+
 project = 'Finder'
 copyright = '2026, tiash-and-cats'
 author = 'tiash-and-cats'
@@ -24,4 +26,7 @@ exclude_patterns = []
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'alabaster'
-html_static_path = ['_static']
+html_static_path = ['_static'] + [
+    str(p) for p in Path('.').rglob('_static')
+    if p.is_dir() and str(p) != '_static'
+]

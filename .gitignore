@@ -1,11 +1,10 @@
 env
 *.pyc
 finder_proj/db.sqlite3
-find4u/cli/node_modules
-find4u/cli/ink-app/node_modules
-find4u/web/node_modules
+node_modules
 finder_proj/ai
 finder_proj/staticprod
 docs/build
 bare
 *.secret
+/package*.json

@@ -4,7 +4,7 @@ import { Box, Text, Newline, useStdout, useApp } from 'ink';
 import { TextInput, Alert } from '@inkjs/ui';
 
 import asciiArt from "./splash.json" with { type: "json" };
-import getTools from "./tools.js";
+import loadConfig from "./config.js";
 
 const configuredTools = [];
 
@@ -74,19 +74,30 @@ export default function App({ openrouter, marked }) {
   const [inputKey, setInputKey] = useState(0);
   const [messages, setMessages] = useState([]);
   
-  const tools = useRef(getTools(messages, setMessages));
+  const [config, setConfig] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const conf = await loadConfig(setMessages);
+      if (mounted) setConfig(conf);
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const [disabled, setDisabled] = useState(false);
   
-  const { exit } = useApp();
-
+  const app = useApp();
+  async function exit() {
+    await config.exit?.();
+    app?.exit();
+  }
+  
   async function onSubmit(msg) {
-    if (msg === "/exit") {
-      exit("Exited");
-    }
-    
     setInputKey(inputKey + 1);
     setDisabled(true);
+    
+    if (msg === "/exit") await exit();
     
     const newMessages = [...messages, { role: "user", content: msg }, { role: "assistant", content: "" }];
     setMessages(newMessages);
@@ -95,7 +106,7 @@ export default function App({ openrouter, marked }) {
       model: 'openrouter/free',
       instructions: "You are a helpful AI assistant called Find4U.",
       input: newMessages.slice(0, newMessages.length).filter(msg => msg.role != "action"),
-      tools: tools.current
+      tools: config?.tools || []
     });
     
     let assistantMsg = { role: "assistant", content: "" };
@@ -118,7 +129,6 @@ export default function App({ openrouter, marked }) {
   
   return (
     <>
-      <Clear />
       <Box 
         minHeight={dimensions.rows} 
         width={dimensions.columns} 

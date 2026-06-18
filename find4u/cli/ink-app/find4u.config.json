@@ -1,0 +1,16 @@
+{
+  "tools": {
+    "builtins": [],
+    "mcp": [
+      {
+        "type": "streamable-http",
+        "url": "https://changethisfile.com/mcp"
+      },
+      {
+        "type": "stdio",
+        "cmd": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "./sandbox"]
+      }
+    ]
+  }
+}

@@ -71,7 +71,7 @@ logoTextAscii = logoTextAscii.split("\n");
 let infoAscii = [
   `Hello, I'm Find4U, your personal ${colors.bold.underline("coding assistant")}`,
   colors.bold.italic("Got a question? I'll jump in."), "",
-  colors.bold.magenta("Docs coming soon!"),
+  colors.bold.magenta("See the docs at https://finder-locw.onrender.com/docs/dev/find4u-cli/"),
   `${colors.dim.italic("Type")} ${colors.cyan("/exit")} ${colors.dim.italic("to exit.")}`
 ];
 

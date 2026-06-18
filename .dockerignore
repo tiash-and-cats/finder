@@ -6,6 +6,7 @@ env
 *.pyc
 *.secret
 find4u/cli
+!find4u/cli/ink-app/config-schema.js
 find4u/web/node_modules
 finder_proj/ai
 finder_proj/repo
