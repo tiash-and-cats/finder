@@ -24,7 +24,7 @@ deps:
 	fi
 	@if [ ! -d node_modules ]; then \
 		npm init --init-type module -y; \
-		npm install zod; \
+		npm install --no-package-lock zod; \
 	fi
 	@if [ ! -d find4u/cli/node_modules ] && [ -d find4u/cli/ink-app/src ]; then \
 		cd find4u/cli; \
