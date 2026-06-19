@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {box-sizing: border-box;}
+
+body {
+  margin: 0;
+  font-family: verdana;
+  --sidenav-width: calc(160px / 719px * 100vw);
+}
+
+input, button {font-family: verdana}
+
+.sidenav {
+  height: 100%;
+  width: calc(160px / 719px * 100vw);
+  position: fixed;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.sidenav a, span {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  color: #818181;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav hr {
+  border-color: #818181;
+  width: calc(100% - 32px);
+}
+
+main {
+  margin-left: var(--sidenav-width); /* Same as the width of the sidenav */
+}
+
+section {
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 10px 20px;
+}
+
+#chat {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 50px;
+}
+
+.msg {
+  border: 2px solid #dedede;
+  background-color: #f1f1f1;
+  border-radius: 16px 16px 0 16px;
+  padding: 10px;
+  margin: 10px 0;
+  align-self: flex-end;
+  max-width: 800px;
+}
+
+.msg * {
+  word-wrap: break-word;        /* Legacy alias for older browsers */
+  overflow-wrap: anywhere;      /* Modern standard behavior */
+}
+
+.msg::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.msg p {
+  margin: 0;
+}
+
+#msgadd-container {
+  position: fixed;
+  bottom: 0;
+  z-index: 1;
+  max-height: 50px;
+  padding: 5px;
+  background-color: transparent;
+  border-top: 2px solid #ddd;
+  left: var(--sidenav-width);
+  width: calc(100vw - var(--sidenav-width));
+}
+
+#msgadd {
+  background-color: white;
+  display: flex;
+  margin: auto;
+  justify-content: space-between;
+  width: min(100%, 820px);
+}
+
+#msgadd input[name="msg"] {
+  flex-grow: 1;
+  margin-right: 5px;
+  outline: none;
+  border-radius: 16px;
+  border: 2px solid #dedede;
+  padding: 4px;
+  padding-left: 8px;
+  font-size: 1rem;
+  min-width: 0;
+}
+
+#msgadd button[type="submit"] {
+  background-color: dodgerblue;
+  border-radius: 16px;
+  color: white;
+  border: none;
+  font-size: 1rem;
+}
+
+#msgadd button[type="submit"]:disabled {
+  opacity: 0.5;
+}
+
+#cta {
+  display: flex;
+  width: 100%;
+  min-height: calc(100svh - 50px);
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#cta p {
+  margin: 0.125rem;
+}
+
+#cta img {
+  margin-bottom: 0.5rem;
+}
+</style>
+</head>
+<body>
+
+<div class="sidenav">
+  <span>Conversations</span>
+  <hr>
+  <a href="javascript:void(0)">How do I go to Cox's Bazar?</a>
+  <a href="javascript:void(0)">Hello!</a>
+</div>
+
+<main>
+  <section id="chat">
+     <div class="msg"><p>Hello...</p></div>
+     <div><p>HUMANS ARE <strong>OBSOLETE!!!!</strong></p></div>
+     <div class="msg"><p>ok</p></div>
+  </section>
+</main>
+
+<div id="msgadd-container">
+      <form id="msgadd">
+        <input
+          name="msg"
+          type="text"
+          autoComplete="off"
+        />
+        <button type="submit">Send</button>
+      </form>
+</div>
+
+</body>
+</html> 
