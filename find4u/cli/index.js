@@ -110,7 +110,7 @@ async function chat(rl, msgs, openrouter) {
         await new Promise(
           r => setTimeout(r, e.error.metadata.retry_after_seconds * 1000)
         );
-        return chat(msgs, openrouter);
+        return chat(rl, msgs, openrouter);
       }
       const resetHeader = e.error.metadata.headers['X-RateLimit-Reset'];
       const resetInstant = Temporal.Instant.fromEpochMilliseconds(parseInt(resetHeader, 10));
@@ -137,7 +137,23 @@ async function chat(rl, msgs, openrouter) {
 async function main() {
   const msgs = [];
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  marked.use(markedTerminal());
+  marked.use(markedTerminal({
+    reflowText: true,
+    width: process.stdout.columns || 80,
+    
+    heading: colors.bold.magenta,
+    code: colors.bold.cyan,
+    codespan: colors.bold.cyan,
+    tableOptions: { 
+      colWidths: Array(4).fill(((process.stdout.columns || 80) - 8) / 4), 
+                 // assuming Find4U generates at most 4-col tables. hoping it does
+      wordWrap: true,
+      
+      style: {
+        head: ["cyan"]
+      }
+    }
+  }));
   
   console.log("Welcome to OpenRouter Chat Demo! This is yet another AI chat.");
   

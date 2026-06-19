@@ -35,7 +35,6 @@ function ChatBox({ messages, marked }) {
           </Box>
         )
       )}
-      <Newline />
     </>
   );
 }
@@ -89,7 +88,7 @@ export default function App({ openrouter, marked }) {
   
   const app = useApp();
   async function exit() {
-    await config.exit?.();
+    await config?.exit();
     app?.exit();
   }
   
@@ -131,14 +130,16 @@ export default function App({ openrouter, marked }) {
     <>
       <Box 
         minHeight={dimensions.rows} 
-        width={dimensions.columns} 
+        maxWidth={dimensions.columns} 
         flexDirection="column"
       >
-        <Box flexGrow={1} flexDirection="column">
+        <Box 
+          flexGrow={1} flexDirection="column"
+        >
           <Splash art={asciiArt} />
           <ChatBox messages={messages} marked={marked} />
         </Box>
-        <Box borderStyle="round" borderDimColor={true}>
+        <Box borderStyle="round" borderDimColor={true} flexShrink={1}>
           <Text color="cyan" bold={true}> &gt; </Text>
           <TextInput key={inputKey} placeholder={disabled ? "Wait for Find4U to finish" : "Ask anything..."}
                      defaultValue="" onSubmit={onSubmit} isDisabled={disabled} />

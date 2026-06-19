@@ -22,9 +22,10 @@ deps:
 		$(SYS_PYTHON) -m venv env; \
 		$(VENV_BIN)/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu; \
 	fi
-	@if [ ! -d node_modules ]; then \
+	@if [ ! -d docs/node_modules ]; then \
+		cd docs; \
 		npm init --init-type module -y; \
-		npm install --no-package-lock zod; \
+		npm install --no-package-lock zod commander; \
 	fi
 	@if [ ! -d find4u/cli/node_modules ] && [ -d find4u/cli/ink-app/src ]; then \
 		cd find4u/cli; \

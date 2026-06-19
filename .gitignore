@@ -1,10 +1,10 @@
 env
-*.pyc
-finder_proj/db.sqlite3
+__pycache__
+/finder_proj/db.sqlite3
 node_modules
-finder_proj/ai
-finder_proj/staticprod
-docs/build
-bare
+/finder_proj/ai
+/finder_proj/staticprod
+/docs/build
+/bare
 *.secret
-/package*.json
+docs/package*.json

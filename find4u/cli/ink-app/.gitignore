@@ -1,3 +1,5 @@
 *.js
 !gen-splash.js
+!config-schema.js
+!cli.js
 !src/*.js

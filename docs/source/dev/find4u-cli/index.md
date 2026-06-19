@@ -56,5 +56,6 @@ Here's an example of a `find4u.config.json`:
 :maxdepth: 2
 :caption: Contents
 
+usage
 config/index
 ```
