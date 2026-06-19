@@ -22,8 +22,7 @@ deps:
 		$(SYS_PYTHON) -m venv env; \
 		$(VENV_BIN)/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu; \
 	fi
-	@if [ ! -d docs/node_modules ]; then \
-		cd docs; \
+	@if [ ! -d node_modules ]; then \
 		npm init --init-type module -y; \
 		npm install --no-package-lock zod commander; \
 	fi
