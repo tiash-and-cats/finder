@@ -2,17 +2,23 @@ import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { Box, Text, Newline, useStdout, useApp } from 'ink';
 import { TextInput, Alert } from '@inkjs/ui';
+import { stripVTControlCharacters } from 'util';
+import { marked } from 'marked';
+import { markedTerminal } from 'marked-terminal';
+import chalk from "chalk";
 
 import asciiArt from "./splash.json" with { type: "json" };
 import loadConfig from "./config.js";
 
 const configuredTools = [];
 
+const noColor = process.env.NO_COLOR && process.env.NO_COLOR !== '';
+
 function Splash({ art }) {
   return (
     <>
       {art.map((line, i) => (
-        <Text key={i}>{line}</Text>
+        <Text key={i}>{noColor ? stripVTControlCharacters(line) : line}</Text>
       ))}
     </>
   );
@@ -41,7 +47,7 @@ function ChatBox({ messages, marked }) {
 
 const Clear = () => <Text>{"\x1bc\x1b[H"}</Text>;
 
-export default function App({ openrouter, marked }) {
+export default function App({ openrouter }) {
   // Use Ink's built-in hook to safely grab the stdout stream
   const { stdout } = useStdout();
   
@@ -81,6 +87,25 @@ export default function App({ openrouter, marked }) {
       const conf = await loadConfig(setMessages);
       if (mounted) setConfig(conf);
     })();
+    
+    marked.use(markedTerminal({
+      reflowText: true,
+      width: process.stdout.columns || 80,
+      
+      heading: chalk.bold.magenta,
+      code: chalk.bold.cyan,
+      codespan: chalk.bold.cyan,
+      tableOptions: {
+        colWidths: Array(4).fill(((process.stdout.columns || 80) - 8 /* table border + padding */) / 4), 
+                   // assuming Find4U generates at most 4-col tables. hoping it does
+        wordWrap: true,
+        
+        style: {
+          head: ["cyan"]
+        }
+      }
+    }));
+    
     return () => { mounted = false; };
   }, []);
 

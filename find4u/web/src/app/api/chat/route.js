@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { OpenRouter } from "@openrouter/agent";
 
-const openrouter = new OpenRouter({
-  apiKey: JSON.parse(process.env.OPENROUTER_KEY),
-});
+let openrouter = null;
 
 export async function POST(req) {
+  if (!openrouter) {
+    openrouter = new OpenRouter({
+      apiKey: JSON.parse(process.env.OPENROUTER_KEY),
+    });
+  }
+  
   const { messages } = await req.json();
 
   let result;

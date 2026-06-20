@@ -18,5 +18,4 @@ EXPOSE 80
 RUN echo "# Set your secrets manually using environment variables" > Makefile.secret
 RUN make deps build SHELL=bash
 
-# Let Makefile handle venv + deps + build
-CMD make build-find4u run SHELL=bash
+CMD make run SHELL=bash

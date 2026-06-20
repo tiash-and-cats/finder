@@ -39,12 +39,10 @@ deps:
 		npm install; \
 	fi
 
-build-find4u: deps
-	cd find4u/web && npm run build
-
 build: deps
 	cd finder_proj && .$(VENV_BIN)/python manage.py migrate
 	cd finder_proj && .$(VENV_BIN)/python manage.py collectstatic --noinput
+	cd find4u/web && npm run build
 	source $(VENV_BIN)/activate && cd docs && make
 
 run: deps
