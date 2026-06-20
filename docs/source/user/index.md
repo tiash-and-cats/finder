@@ -6,6 +6,6 @@ Tried to use Finder or Find4U and got confused, bamboozled, or otherwise puzzled
 :maxdepth: 2
 :caption: Contents
 
-finder
-find4u
+finder/index
+find4u/index
 ```
