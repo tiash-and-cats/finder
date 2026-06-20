@@ -141,10 +141,9 @@ def main():
     # create reverse proxy
     app, close = reverse_proxy()
     
-    # start Waitress on port 80
     print("Listening on http://localhost, ^C to exit")
     try:
-        serve(app, listen="*:80")
+        serve(app, listen=f"*:{os.environ["PORT"] or 80}")
     except KeyboardInterrupt:
         print("Exited")
     finally:

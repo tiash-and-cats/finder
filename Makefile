@@ -6,6 +6,7 @@ else
 VENV_BIN=./env/bin
 endif
 
+PORT=80
 SYS_PYTHON=python
 
 ifneq ($(wildcard Makefile.secret),)
@@ -51,7 +52,7 @@ run: deps
 		exit 1; \
 	fi
 	@# Run the Python runner
-	$(VENV_BIN)/python Makefile.run.py
+	PORT=$(PORT) $(VENV_BIN)/python Makefile.run.py
 
 Makefile.secret: | deps
 	$(VENV_BIN)/python build-Makefile.secret.py
