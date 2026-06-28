@@ -1,4 +1,4 @@
-You may notice that the initial commit for this repo is not "Initial commit" or "Initial import from somewhere" or "A fresh start" or anything like that. It's "Migrated to new laptop". Why? This repo used to be closed source on OneDrive that was only accessible to me. When copying it over to my new laptop, I didn't copy the `.git` folder as it was taking too long. So here is the `git log` of that old Git repo. Note that this is before this repo's initial commit.
+You may notice that the initial commit for this repo is not "Initial commit" or "Initial import from somewhere" or "A fresh start" or anything like that. It's "Migrated to new laptop". Why? This repo used to be closed source on OneDrive that was only accessible to me. When copying it over to my new laptop, I didn't copy the `.git` folder as it was taking too long. So here is the `git log` of that old Git repo. Note that this is before this repo's initial commit; no actual Find4U or Find4U CLI at this time, just Finder and router.py (which was later scrapped 2536fff) and dreams of Find4U.
 
 `````
 commit f57f621d96c0e278a6973a094fffdc9c9c420d0d (HEAD -> master)
