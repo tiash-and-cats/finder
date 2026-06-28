@@ -2,7 +2,10 @@
 
 > **EPILEPSY WARNING:** The CLI can flicker. User discretion is advised. I am working to fix this.
 
-[![](./_static/screenshot.png)](https://asciinema.org/a/1257517)
+```{image} ./_static/screenshot.png
+:width: 100%
+:target: https://asciinema.org/a/1257517
+```
 
 The Find4U CLI is your AI coding assistant. Currently, it can participate in conversations and read and write files.
 

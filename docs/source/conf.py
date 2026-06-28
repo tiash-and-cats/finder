@@ -6,6 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from better import better_theme_path
 from pathlib import Path
 
 project = 'Finder'
@@ -25,7 +26,8 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme_path = [better_theme_path]
+html_theme = 'better'
 html_static_path = ['_static'] + [
     str(p) for p in Path('.').rglob('_static')
     if p.is_dir() and str(p) != '_static'

@@ -30,7 +30,7 @@ def reverse_proxy():
         "te",
         "trailer",
         "upgrade",
-        "transfer-encoding",  # Waitress can't handle chunked
+        "transfer-encoding",
     }
     http = urllib3.PoolManager(maxsize=20)
     
@@ -115,17 +115,14 @@ def reverse_proxy():
             
         # if the request targets /docs, redirect to /docs/
         if path == "/docs":
-            def redirect(environ, start_response):
-                start_response("301 Moved Permanently", [("Location", "/docs/")])
-                return [b""]
-                
-            wsgi = redirect
-            
+            start_response("301 Moved Permanently", [("Location", "/docs/")])
+            return [b""]
+        
         # if the request targets /docs/, give it to WhiteNoise
         if path.startswith("/docs/"):
             if environ["PATH_INFO"].endswith("/"):
                 environ["PATH_INFO"] += "index.html"
-                
+            
             wsgi = docs_wsgi
         
         return wsgi(environ, start_response)
@@ -141,7 +138,7 @@ def main():
     # create reverse proxy
     app, close = reverse_proxy()
     
-    print("Listening on http://localhost, ^C to exit")
+    print(f"Listening on http://localhost:{os.environ["PORT"] or 80}, ^C to exit")
     try:
         serve(app, listen=f"*:{os.environ["PORT"] or 80}")
     except KeyboardInterrupt:

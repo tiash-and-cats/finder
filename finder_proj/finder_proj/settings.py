@@ -132,10 +132,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# All my settings - if you cloned this repo, I invite you to tweak these (and everything else)!
-
-GIT_PUSH_ENABLED = False # Specifies if `git push` requests to `/repo/repo.git` should be allowed
-                         # Obviously False here, for security reasons, but you can change this to True if you so wish!
-                         # Read commit de0f88f for more info about the security implications of setting this to True.
-
 STATIC_ROOT = BASE_DIR / 'staticprod'
