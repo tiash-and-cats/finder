@@ -7,12 +7,12 @@
 {% endblock title %}
 
 {% block content %}
-   <div class="fullscreen-search">
-	  <div>
+  <div class="fullscreen-search">
+    <div>
       <img src='{% static "logo.svg" %}' alt="Finder Logo" width="300px" style="margin-bottom: 10px;">
       <form class="search" action='{% url "search:search_results" %}'>
         <input type="text" placeholder="Search.." name="q" autocomplete="off" list="common" id="search">
-	    <datalist id="common"></datalist>
+        <datalist id="common"></datalist>
         <button type="submit"><i class="fa fa-search"></i></button>
       </form>
    
@@ -21,8 +21,8 @@
         <p><a href="/find4u">NEW! Use our Find4U AI to search like you talk (still learning, but fun!)</a></p>
         <p><a href="/docs">Need help? See the docs!</a></p>
       {% endif %}
-	  </div>
-   </div>
+    </div>
+  </div>
 {% endblock content %}
 
 {% block scripts %}
