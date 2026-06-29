@@ -9,6 +9,7 @@ import traceback
 import textwrap
 from whitenoise import WhiteNoise
 from waitress import serve
+from webob import Response
 
 def reverse_proxy():
     sys.path.append("finder_proj")
@@ -115,8 +116,9 @@ def reverse_proxy():
             
         # if the request targets /docs, redirect to /docs/
         if path == "/docs":
-            start_response("301 Moved Permanently", [("Location", "/docs/")])
-            return [b""]
+            wsgi = Response()
+            wsgi.status = 301
+            wsgi.location = "/docs/"
         
         # if the request targets /docs/, give it to WhiteNoise
         if path.startswith("/docs/"):
@@ -125,7 +127,12 @@ def reverse_proxy():
             
             wsgi = docs_wsgi
         
-        return wsgi(environ, start_response)
+        def start_res(status, headerlist):
+            return start_response(status, [
+                ("via", "Finder-Makefile.run.py/0.0.0"), *headerlist
+            ])
+        
+        return wsgi(environ, start_res)
     
     def close():
         find4u_popen.terminate()

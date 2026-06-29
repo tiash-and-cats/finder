@@ -1,0 +1,4 @@
+Hello!
+How can I write a "Hello world!" program in Python vs JavaScript vs C vs C++?
+Ok. But I have a more serious issue. My cat has hijacked my computer. What can I do?
+I ended up having to buy a new computer and give her the old one...
