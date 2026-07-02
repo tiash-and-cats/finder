@@ -74,13 +74,20 @@ Find4U is a Next.js app. It uses OpenRouter to prompt `openrouter/free` to answe
 
 These docs are built using Sphinx.
 
+### Status page
+
+The status page and status JSON API are built using Flask. It reads from a provided `Status` object that the [reverse proxy](#reverse-proxy) logs each response into. The object then decides if the request was successful or not. HTTP status codes < 500 are considered successful, as client errors (4xx) are not the server's fault.
+
 ### Reverse proxy
 
 Running `make` runs `<path-to-venv-python>/python Makefile.run.py` (the exact path depends on your OS). `Makefile.run.py` is the actual code that runs the server. It starts the Find4U Next.js server and then uses `waitress` to serve a WSGI application. The application:
 
-- forwards all requests with the path starting with `find4u/` to the Next.js server,
-- forwards all requests with the path starting with `docs/` to a [WhiteNoise](https://whitenoise.readthedocs.io/en/latest/index.html) WSGI application,
+- forwards all requests with the path starting with `find4u/` to the Next.js server running Find4U,
+- forwards all requests with the path starting with `docs/` to a [WhiteNoise](https://whitenoise.readthedocs.io/en/latest/index.html) WSGI application serving the docs,
+- forwards all requests with the path starting with `status/` to the status page Flask app,
 - and otherwise forwards requests to Finder's Django WSGI app.
+
+When forwarding requests, it provides it's own version of `start_response` that logs the response into a `Status` object before injecting a `Via: Finderservices-Orchestration/BUILDDATE-BUILDBRANCH-BUILDCOMMIT` header and calling the real `start_response`.
 
 ## Docker
 
