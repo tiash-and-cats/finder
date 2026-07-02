@@ -1,4 +1,15 @@
-import html.parser, urllib.request, urllib.parse, urllib.robotparser, time, random
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finder_proj.settings")
+django.setup()
+
+import html.parser
+import urllib.request
+import urllib.parse
+import urllib.robotparser
+import time
+import random
 from api.models import Indexed
 from urllib.error import HTTPError, URLError
 from datetime import datetime

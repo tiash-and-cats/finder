@@ -17,9 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic.base import RedirectView
+from django.conf import settings
 
 urlpatterns = [
     path('', include('search.urls')),
-    path('admin/', admin.site.urls),
     path('repo/', RedirectView.as_view(url='https://github.com/tiash-and-cats/finder/', permanent=True)),
 ]
+
+if settings.DEBUG:
+    urlpatterns.append(path('admin/', admin.site.urls))

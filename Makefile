@@ -45,6 +45,7 @@ build: deps
 	cd finder_proj && .$(VENV_BIN)/python manage.py collectstatic --noinput
 	cd find4u/web && npm run build
 	source $(VENV_BIN)/activate && cd docs && make
+	python finder_buildinfo.generate.py
 
 run: deps
 	@if [ ! -f Makefile.secret ]; then \
@@ -55,6 +56,6 @@ run: deps
 	PORT=$(PORT) $(VENV_BIN)/python Makefile.run.py
 
 Makefile.secret: | deps
-	$(VENV_BIN)/python build-Makefile.secret.py
+	$(VENV_BIN)/python Makefile.secret.generate.py
 	
 .PHONY: deps run finder find4u

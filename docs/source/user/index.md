@@ -8,4 +8,5 @@ Tried to use Finder or Find4U and got confused, bamboozled, or otherwise puzzled
 
 finder/index
 find4u/index
+status
 ```

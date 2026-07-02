@@ -46,15 +46,19 @@ Next, run `make build`.
 
 Then you can cd back into the project root and run `make` to start the web server.
 
-You will notice that no pages have been indexed. To index some pages, you must start the web crawler.
+You will notice that no pages have been indexed. You can do one of two things:
 
-To start the web crawler, cd into `finder_proj` with the `env` virtual environment running and run:
+- To index some pages, you must start the web crawler by cd-ing into `finder_proj` with the `env` virtual environment running (your prompt should have `(env)` in front of it) and running:
+  ``` sh
+  python manage.py shell -c "import crawl; crawl.start_crawl('<seedfile>')"
+  ```
+  Some seedfiles are given.
 
-``` sh
-python manage.py shell -c "import crawl; crawl.start_crawl('<seedfile>')"
-```
-
-Some seedfiles are given.
+- Alternatively, you can run:
+  ``` sh
+  python manage.py loaddata ../2026-06-29-ref-db.sqlite3.json
+  ```
+  to load some indexed pages that I (`tiash-and-cats`) have done the hard work of running the crawler to crawl. :)
 
 ## Architecture
 

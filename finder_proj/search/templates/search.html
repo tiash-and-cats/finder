@@ -20,6 +20,9 @@
       {% if prod %}
         <p><a href="/find4u">NEW! Use our Find4U AI to search like you talk (still learning, but fun!)</a></p>
         <p><a href="/docs">Need help? See the docs!</a></p>
+        <p><a href="/status">Is Finder up? Check here.</a></p>
+      {% else %}
+        <p><a href='{% url "admin:login" %}'>DEBUG: Log in to admin panel</a></p>
       {% endif %}
     </div>
   </div>

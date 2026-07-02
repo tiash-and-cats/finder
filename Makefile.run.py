@@ -9,7 +9,10 @@ import traceback
 import textwrap
 from whitenoise import WhiteNoise
 from waitress import serve
-from webob import Response
+from webob import Request, Response
+
+import finder_buildinfo
+from status import Status, create_app as create_status_app
 
 def reverse_proxy():
     sys.path.append("finder_proj")
@@ -103,22 +106,33 @@ def reverse_proxy():
 
         start_response(status_line, response_headers)
         return body_iter()
+        
+    status = Status()
+    status.add_service("Finder")
+    status.add_service("Find4U")
+    status.add_service("Documentation")
+    status.add_service("Status page")
+    
+    status_wsgi = create_status_app(status)
     
     def app(environ, start_response):
         path = environ.get('PATH_INFO', '')
         
         # default to Finder
         wsgi = finder_wsgi
+        svc = "Finder"
         
         # if the request targets /find4u, give it to find4u
         if path.startswith("/find4u"):
             wsgi = find4u_wsgi
+            svc = "Find4U"
             
         # if the request targets /docs, redirect to /docs/
         if path == "/docs":
             wsgi = Response()
             wsgi.status = 301
             wsgi.location = "/docs/"
+            svc = "Documentation"
         
         # if the request targets /docs/, give it to WhiteNoise
         if path.startswith("/docs/"):
@@ -126,10 +140,19 @@ def reverse_proxy():
                 environ["PATH_INFO"] += "index.html"
             
             wsgi = docs_wsgi
+            svc = "Documentation"
+            
+        # if the request targets /status, give it to the status Flask app
+        if path.startswith("/status"):
+            wsgi = status_wsgi
+            svc = "Status page"
         
-        def start_res(status, headerlist):
-            return start_response(status, [
-                ("via", "Finder-Makefile.run.py/0.0.0"), *headerlist
+        def start_res(status_line, headerlist):
+            status.service_request(svc, status_line)
+            return start_response(status_line, [
+                ("via", "Finderservices-Orchestration/" \
+                f"{finder_buildinfo.BUILDDATE}-{finder_buildinfo.BUILDBRANCH}"
+                f"-{finder_buildinfo.BUILDCOMMIT}"), *headerlist
             ])
         
         return wsgi(environ, start_res)
