@@ -1,6 +1,6 @@
+@import url("styleguide.css");
+
 body {
-  font-family: Verdana;
-  
   /* we can modify this to our liking */
   --search-round: 5px;
   --search-font-size: 17px;
@@ -10,10 +10,6 @@ body {
   /* we DON'T need to worry about this */
   --search-magic-padding-num: calc(var(--search-padding-17px) / 17);
   --search-padding: calc(var(--search-font-size) * var(--search-magic-padding-num));
-}
-
-* {
-  box-sizing: border-box;
 }
 
 form.search input[type=text] {

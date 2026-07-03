@@ -32,3 +32,6 @@ html_static_path = ['_static'] + [
     str(p) for p in Path('.').rglob('_static')
     if p.is_dir() and str(p) != '_static'
 ]
+html_theme_options = {
+    "cssfiles": ["_static/styles.css"]
+}

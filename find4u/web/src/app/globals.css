@@ -1,13 +1,10 @@
-* {box-sizing: border-box;}
+@import url("./styleguide.css");
 
 body {
   margin: 0 auto;
   max-width: 800px;
   padding: 0 20px;
-  font-family: verdana;
 }
-
-input, button {font-family: verdana}
 
 table {
   border-collapse: collapse;

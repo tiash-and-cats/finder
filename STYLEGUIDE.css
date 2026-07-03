@@ -1,0 +1,12 @@
+/* This file SHOULD be imported into each service's CSS. */
+
+* { box-sizing: border-box; }
+
+body, input, button {
+  font-family: Verdana, Tahoma, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: bold;
+  font-family: Georgia, Verdana, Tahoma, sans-serif;
+}

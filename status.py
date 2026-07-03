@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, Response
 import datetime
 import textwrap
 
@@ -62,6 +62,11 @@ def create_app(status):
             "services": status.summary(),
             "overall_success_rate": status.success_rate()
         })
+        
+    @app.route("/status/styleguide.css")
+    def styleguide():
+        with open("STYLEGUIDE.css") as f:
+            return Response(f.read(), mimetype="text/css")
 
     @app.route("/status")
     def status_html():
@@ -73,10 +78,11 @@ def create_app(status):
         <head>
         <title>Finder Status: {{headline_text}}</title>
         <style>
+        @import url("/status/styleguide.css");
+        
         body {
           margin: 0;
           padding: 40px;
-          font-family: Verdana, Tahoma, sans-serif;
         }
         
         .home {
