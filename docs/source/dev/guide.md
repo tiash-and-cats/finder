@@ -16,7 +16,21 @@ with:
 
 installed. This will start the web server.
 
-If this is your first time running `make`, it might say:
+```` {note}
+This repo requires Git symlinks to function properly. Check if Git symlinks are enabled using the command:
+
+``` sh
+git config core.symlinks
+```
+
+If it outputs `false`, enable Git symlinks via the command:
+
+``` sh
+git config --global core.symlinks true
+```
+````
+
+It might say:
 ```
 Makefile:17: No Makefile.secret detected. You can choose to create one using the Makefile.secret rule. Or you can make it yourself.
 No Makefile.secret found: run make Makefile.secret

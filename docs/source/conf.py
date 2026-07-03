@@ -35,3 +35,6 @@ html_static_path = ['_static'] + [
 html_theme_options = {
     "cssfiles": ["_static/styles.css"]
 }
+html_sidebars = {
+    '**': ['localtoc.html', 'sourcelink.html', 'searchbox.html'],
+}

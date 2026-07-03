@@ -168,7 +168,6 @@ EXTS = {
                                 display: flex;
                                 align-items: center;
                                 gap: 12px;
-                                font-family: "Segoe UI", sans-serif;
                                 margin-bottom: 14px;
                             }
                             .icon-big {
@@ -193,7 +192,6 @@ EXTS = {
                                 padding: 8px;
                                 min-width: 72px;
                                 text-align: center;
-                                font-family: "Segoe UI", sans-serif;
                             }
                             .forecast-day .icon {
                                 font-size: 24px;
@@ -209,7 +207,6 @@ EXTS = {
                             }
                             .attribution {
                               font-size: 12px;
-                              font-family: system-ui, sans-serif;
                               color: #888;
                               margin-top: 12px;
                               text-align: right;

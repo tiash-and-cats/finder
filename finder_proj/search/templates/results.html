@@ -3,6 +3,7 @@
 {% load search_ext %}
 {% load searchbox %}
 {% load static %}
+{% load favicon %}
 
 {% block title %}
    Search results for {{ query }}
@@ -34,7 +35,7 @@
       
    {% for x in results %}
 	  <div class="page box">
-          <h3 class="title" style="--favicon: url('{{ x.favicon }}')"><a href="{{ x.url }}">{{ x.title }}</a></h3>
+          <h3 class="title" style="--favicon: url('{% favicon x %}')"><a href="{{ x.url }}">{{ x.title }}</a></h3>
 		  <p class="url">{{ x.url }}</p>
           <p class="desc">{{ x.desc }}</p>
    	      <p class="content">{{ x.content }}...</p>

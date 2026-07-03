@@ -1,3 +1,6 @@
 @import url("styleguide.css");
 
-h2 { font-size: 1.25em; }
+h2 {
+  font-weight: bold;
+  font-size: 1.375em;
+}

@@ -3,7 +3,7 @@
 body {
   /* we can modify this to our liking */
   --search-round: 5px;
-  --search-font-size: 17px;
+  --search-font-size: 16px;
   --search-padding-17px: 7; /* what the padding would be if --search-font-size was 17px, in px */
   --search-border: 1px solid grey;
   
@@ -91,9 +91,9 @@ div.fullscreen-search {
 }
 
 .topnav input[type=text] {
-  padding: 6px;
+  padding: var(--search-padding);
   margin-top: 8px;
-  font-size: 17px;
+  font-size: var(--search-font-size);
   border: var(--search-border);
   border-top-left-radius: var(--search-round);
   border-bottom-left-radius: var(--search-round);
