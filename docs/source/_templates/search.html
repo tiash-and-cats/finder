@@ -1,0 +1,8 @@
+{% extends "!search.html" %}
+
+{% block searchbox %}
+  <form class="search" method="get">
+    <input type="text" placeholder="Search.." name="q" autocomplete="off" />
+    <button type="submit"><i class="fa fa-search"></i></button>
+  </form>
+{% endblock %}

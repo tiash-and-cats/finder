@@ -9,7 +9,8 @@ import traceback
 import textwrap
 from whitenoise import WhiteNoise
 from waitress import serve
-from webob import Request, Response
+from webob import Response
+from wsgiref import util
 
 import finder_buildinfo
 from status import Status, create_app as create_status_app
@@ -26,16 +27,6 @@ def reverse_proxy():
             "PORT": "3000"
         }
     )
-    HOP_BY_HOP = {
-        "connection",
-        "keep-alive",
-        "proxy-authenticate",
-        "proxy-authorization",
-        "te",
-        "trailer",
-        "upgrade",
-        "transfer-encoding",
-    }
     http = urllib3.PoolManager(maxsize=20)
     
     def docs_wsgi(environ, start_response):
@@ -67,7 +58,7 @@ def reverse_proxy():
         for key, value in environ.items():
             if key.startswith("HTTP_"):
                 header_name = key[5:].replace("_", "-").title()
-                if header_name.lower() not in HOP_BY_HOP:
+                if not util.is_hop_by_hop(header_name.lower()):
                     headers[header_name] = value
         if environ.get("CONTENT_TYPE"):
             headers["Content-Type"] = environ["CONTENT_TYPE"]
@@ -92,10 +83,9 @@ def reverse_proxy():
             return [f"Oops! Proxy error: {e}".encode("utf-8")]
 
         status_line = f"{resp.status} {resp.reason}"
-        response_headers = [
-            (k, v) for k, v in resp.headers.items()
-            if k.lower() not in HOP_BY_HOP
-        ]
+        response_headers = filter(
+            lambda x: not util.is_hop_by_hop(x[0]), resp.headers.items()
+        )
 
         # Streaming body iterator
         def body_iter():

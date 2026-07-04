@@ -4,3 +4,7 @@ h2 {
   font-weight: bold;
   font-size: 1.375em;
 }
+
+.sphinxsidebarwrapper .search {
+  margin-top: 0;
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<style>
+.emoji {
+  height: 1em;
+  margin-inline: 0.25ch;
+}
+</style>
+<body>
+
+<textarea id="x"></textarea>
+<hr>
+<div id="preview"></div>
+
+<script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js"></script>
+
+<script>
+const e = document.getElementById("x");
+const preview = document.getElementById("preview");
+e.oninput = () => {
+  preview.innerText = e.value;
+  twemoji.parse(preview);
+};
+</script>
+
+
+</body>
+</html>

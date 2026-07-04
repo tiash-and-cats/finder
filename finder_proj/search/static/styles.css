@@ -1,64 +1,20 @@
 @import url("styleguide.css");
 
-body {
-  /* we can modify this to our liking */
-  --search-round: 5px;
-  --search-font-size: 16px;
-  --search-padding-17px: 7; /* what the padding would be if --search-font-size was 17px, in px */
-  --search-border: 1px solid grey;
-  
-  /* we DON'T need to worry about this */
-  --search-magic-padding-num: calc(var(--search-padding-17px) / 17);
-  --search-padding: calc(var(--search-font-size) * var(--search-magic-padding-num));
-}
-
-form.search input[type=text] {
-  padding: var(--search-padding);
-  font-size: var(--search-font-size);
-  border: var(--search-border);
-  float: left;
-  width: 80%;
-  background: #f1f1f1;
-  border-top-left-radius: var(--search-round);
-  border-bottom-left-radius: var(--search-round);
-  outline: none;
-}
-
-form.search button {
-  float: left;
-  width: 20%;
-  padding: var(--search-padding);
-  background: #2196F3;
-  color: white;
-  font-size: var(--search-font-size);
-  border: var(--search-border);
-  border-left: none;
-  cursor: pointer;
-  border-top-right-radius: var(--search-round);
-  border-bottom-right-radius: var(--search-round);
-}
-
-form.search button:hover {
-  background: #0b7dda;
-}
-
-form.search::after {
-  content: "";
-  clear: both;
-  display: table;
-}
-
 div.fullscreen-search {
   display: grid;
   justify-content: center;
   align-items: center;
   align-content: center;
-  height: calc(100vh - 16px);
-  width: calc(100vw - 16px);
+  height: 100vh;
+  width: 100vw - 16px;
   text-align: center;
   & div {
     max-width: 300px;
   }
+}
+
+main {
+  padding-inline: 16px;
 }
 
 .topnav {
@@ -189,5 +145,36 @@ div.fullscreen-search {
         color: purple;
       }
     }
+  }
+}
+
+.not-found {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+
+  .container {
+    display: inline-flex;
+    justify-content: center;
+    width: 800px;
+    gap: 1ch;
+    & > * { 
+      display: flex;
+      width: min(400px, 100%);
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .desc * {
+      margin-top: 0;
+      hyphens: auto; 
+    }
+    .attr { font-style: italic; }
+  }
+}
+
+@media (max-width: 800px) {
+  .not-found .container {
+    width: 400px;
+    flex-direction: column;
   }
 }
