@@ -21,7 +21,9 @@ from django.conf import settings
 
 urlpatterns = [
     path('', include('search.urls')),
-    path('repo/', RedirectView.as_view(url='https://github.com/tiash-and-cats/finder/', permanent=True)),
+    path('repo/', RedirectView.as_view(
+        url='https://github.com/tiash-and-cats/finder/', permanent=True
+    )),
 ]
 
 if settings.DEBUG:

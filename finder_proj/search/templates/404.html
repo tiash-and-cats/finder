@@ -1,0 +1,23 @@
+{% extends "master.html" %}
+{% load static %}
+
+{% block title %}
+  Nothing to see here... (404)
+{% endblock title %}
+
+{% block content %}
+  <div class="vertical-center error">
+    <div class="container">
+      <img src="{% static 'cats-around-a-box.png' %}">
+      <div>
+        <div class="desc">
+          <h2>Nothing to see here...</h2>
+          <p>The cats looked everywhere, but they couldn't find the page you wanted. (HTTP Error 404 Not Found)</p>
+          <p><strong>Did a link lead you here?</strong> If so, the link is broken, and probably has been for a long time. If you can, reach out to the authors of the link and ask them if they could fix it. (Be respectful!)</p>
+          <p><strong>Feeling lost?</strong> That's okay. Slowly breathe in and out. You can <a href="/">click here to get home</a>.</p>
+        </div>
+        <div class="attr">Image by <a href="https://pixabay.com/users/biancavandijk-9606149/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=8702528">Bianca Van Dijk</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=8702528">Pixabay</a></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -10,58 +10,57 @@
 {% endblock title %}
 
 {% block content %}
-   <div class="topnav">
-     <a href='{% url "search:search" %}'>
-       <img src='{% static "logo.svg" %}' alt="Finder Logo" width="76.813px">
-     </a>
-     <div class="search-container">
-       <form action="/search/">
-         <input type="text" value="{{ query }}" placeholder="Search.." name="q" autocomplete="off" list="common" id="search">
-		 <datalist id="common"></datalist>
-         <button type="submit"><i class="fa fa-search"></i></button>
-       </form>
-     </div>
-   </div>
-   
-   <main>
-     <p>{{ total|intcomma }} pages found</p>
-     
-     {% extensions_html query as ext %}
-     {% if ext.ext_match %}
-        <div class="box" id="ext">
-            {{ ext.ext_html|safe }}
-        </div>
-      <hr>
-     {% endif %}
-        
-     {% for x in results %}
-        <div class="page box">
-          <h3 class="title" style="--favicon: url('{% favicon x %}')"><a href="{{ x.url }}">{{ x.title }}</a></h3>
-          <p class="url">{{ x.url }}</p>
-          <p class="desc">{{ x.desc }}</p>
-          <p class="content">{{ x.content }}...</p>
-        </div>
-     {% empty %}
-        <div class="not-found">
-          <div class="container">
-            <img src="{% static 'cat-in-a-box.png' %}">
-            <div>
-              <div class="desc">
-                <h2>Looks like it's empty in here!</h2>
-                <p>The cats looked around and nothing turned up. Oh well.</p>
-                <p>Some things to try:</p>
-                <ul>
-                  <li>Use fewer and more common keywords. For example: instead of <em>"what is pneumonoultramicroscopicsilicovolcanoconiosis"</em> try <em>"silicosis"</em>.</li>
-                  <li>Ask <a href="/find4u">Find4U</a> for help instead. It might be a bit smarter.</li>
-                </ul>
-              </div>
-              <div class="attr">Image by <a href="https://pixabay.com/users/biancavandijk-9606149/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=8702528">Bianca Van Dijk</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=8702528">Pixabay</a></div>
-            </div>
+  <div class="topnav">
+    <a href='{% url "search:search" %}'>
+      <img src='{% static "logo.svg" %}' alt="Finder Logo" width="76.813px">
+    </a>
+    <div class="search-container">
+      <form action="/search/">
+        <input type="text" value="{{ query }}" placeholder="Search.." name="q" autocomplete="off" list="common" id="search">
+        <datalist id="common"></datalist>
+        <button type="submit"><i class="fa fa-search"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <main>
+    <p>{{ total|intcomma }} pages found</p>
+
+    {% extensions_html query as ext %}
+    {% if ext.ext_match %}
+    <div class="box" id="ext">
+        {{ ext.ext_html|safe }}
+    </div>
+    <hr>
+    {% endif %}
+
+    {% for x in results %}
+    <div class="page box">
+      <h3 class="title" style="--favicon: url('{% favicon x %}')"><a href="{{ x.url }}">{{ x.title }}</a></h3>
+      <p class="url">{{ x.url }}</p>
+      <p class="desc">{{ x.desc }}</p>
+      <p class="content">{{ x.content }}...</p>
+    </div>
+    {% empty %}
+    <div class="error">
+      <div class="container">
+        <img src="{% static 'cat-in-a-box.png' %}">
+        <div>
+          <div class="desc">
+            <h2>Looks like it's empty in here!</h2>
+            <p>The cats looked around and nothing turned up. Oh well.</p>
+            <p>Some things to try:</p>
+            <ul>
+              <li>Use fewer and more common keywords. For example: instead of <em>"what is pneumonoultramicroscopicsilicovolcanoconiosis"</em> try <em>"silicosis"</em>.</li>
+              <li>Ask <a href="/find4u">Find4U</a> for help instead. It might be a bit smarter.</li>
+            </ul>
           </div>
+          <div class="attr">Image by <a href="https://pixabay.com/users/biancavandijk-9606149/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=8702528">Bianca Van Dijk</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=8702528">Pixabay</a></div>
         </div>
-     {% endfor %}
-     <br>
-   </main>
+      </div>
+    </div>
+    {% endfor %}
+  </main>
 {% endblock content %}
 
 {% block scripts %}

@@ -6,7 +6,7 @@ div.fullscreen-search {
   align-items: center;
   align-content: center;
   height: 100vh;
-  width: 100vw - 16px;
+  width: 100vw;
   text-align: center;
   & div {
     max-width: 300px;
@@ -14,7 +14,8 @@ div.fullscreen-search {
 }
 
 main {
-  padding-inline: 16px;
+  padding: 16px;
+  padding-top: 0;
 }
 
 .topnav {
@@ -148,7 +149,7 @@ main {
   }
 }
 
-.not-found {
+.error {
   display: flex;
   justify-content: center;
   width: 100%;
@@ -157,24 +158,46 @@ main {
     display: inline-flex;
     justify-content: center;
     width: 800px;
+    height: 400px;
     gap: 1ch;
+
     & > * { 
       display: flex;
       width: min(400px, 100%);
+    }
+
+    & > div {
       flex-direction: column;
       justify-content: space-between;
+      height: min(400px, 100%);
     }
+
+    img {
+      width: min(400px, 100%);
+      height: min(400px, 100%);
+      object-fit: contain; // or 'cover' depending on whether you want cropping
+    }
+
     .desc * {
       margin-top: 0;
       hyphens: auto; 
     }
+
     .attr { font-style: italic; }
   }
 }
 
 @media (max-width: 800px) {
-  .not-found .container {
+  .error .container {
     width: 400px;
     flex-direction: column;
   }
+}
+
+.vertical-center {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  height: 100svh;
 }

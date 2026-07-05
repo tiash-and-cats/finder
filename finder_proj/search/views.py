@@ -21,7 +21,8 @@ def parse_query(query):
 
     qexp = Q()
     for x in splitquery:
-        qexp &= Q(keywds__icontains=x) | Q(title__icontains=x) | Q(content__icontains=x)
+        qexp &= Q(keywds__icontains=x) | Q(title__icontains=x) | \
+                Q(content__icontains=x)
 
     if site:
         qexp &= Q(url__icontains=site)
@@ -58,7 +59,8 @@ def search_results(request):
             'query': query,
             'total': len(scored),
             'results': scored,
-            "common": list(CommonSearch.objects.order_by("-count").values_list("phrase", flat=True))[:100]
+            "common": list(CommonSearch.objects.order_by("-count"). \
+                      values_list("phrase", flat=True))[:100]
         }
         template = loader.get_template('results.html')
         return HttpResponse(template.render(context, request))
@@ -69,15 +71,16 @@ def indexed(request):
     indexed = Indexed.objects.all().order_by("-rank").values()
     template = loader.get_template('indexed.html')
     context = {
-      'indexed': indexed,
-      "total": len(indexed)
+        'indexed': indexed,
+        "total": len(indexed)
     }
     return HttpResponse(template.render(context, request))
 
 def search(request):
     template = loader.get_template('search.html')
     context = {
-      "common": list(CommonSearch.objects.order_by("-count").values_list("phrase", flat=True))[:100],
-      "prod": not settings.DEBUG
+        "common": list(CommonSearch.objects.order_by("-count") \
+                       .values_list("phrase", flat=True))[:100],
+        "prod": not settings.DEBUG
     }
     return HttpResponse(template.render(context, request))
