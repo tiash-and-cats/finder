@@ -1,10 +1,11 @@
 from flask import Flask, jsonify, render_template_string, Response
-import datetime
+from datetime import datetime
 import textwrap
 
 class Status:    
     def __init__(self, history_limit=100):
         self.services = {}
+        self.start_time = datetime.utcnow()
         self.history_limit = history_limit
     
     def add_service(self, name):
@@ -30,7 +31,7 @@ class Status:
             reqs = [r for lst in self.services.values() for r in lst]
         return (sum(reqs) / len(reqs)) if reqs else None
 
-    def summary(self):
+    def service_summary(self):
         return {
             name: {
                 "checks": len(results),
@@ -39,6 +40,16 @@ class Status:
                 "success_rate": (sum(results) / len(results)) if results else None
             }
             for name, results in self.services.items()
+        }
+        
+    def uptime(self): return datetime.utcnow() - self.start_time
+    
+    def json(self):
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "success_rate": self.success_rate(),
+            "uptime": self.uptime().total_seconds(),
+            "services": self.service_summary()
         }
 
 def create_app(status):
@@ -57,11 +68,7 @@ def create_app(status):
 
     @app.route("/status/api")
     def status_json():
-        return jsonify({
-            "timestamp": datetime.datetime.utcnow().isoformat(),
-            "services": status.summary(),
-            "overall_success_rate": status.success_rate()
-        })
+        return jsonify(status.json())
         
     @app.route("/status/styleguide.css")
     def styleguide():
@@ -70,7 +77,7 @@ def create_app(status):
 
     @app.route("/status")
     def status_html():
-        summary = status.summary()
+        summary = status.service_summary()
         headline_class, headline_text = headline_class_and_text()
         html = textwrap.dedent("""\
         <!DOCTYPE html>
@@ -177,6 +184,11 @@ def create_app(status):
         <h1 class="{{headline_class}}">{{headline_text}} <a class="home" href="/"><img src="/static/logo.svg"></a></h1>
         
         <p>Confused? See the docs <a href="/docs/user/status.html">here</a>.</p>
+        <hr>
+        <p><strong>Total uptime:</strong> 
+          <span id="uptime"></span>
+          <noscript>{{uptime}}</noscript>
+        </p>
 
         {% for name, data in summary.items() %}
         <p><div class="card">
@@ -196,11 +208,31 @@ def create_app(status):
              </span></p>
         </div></p>
         {% endfor %}
+        
+        <script>
+        let uptimeSeconds = /* server-rendered */ {{uptime.total_seconds() | round}};
+
+        function formatUptime(seconds) {
+          let hours = Math.floor(seconds / 3600);
+          let minutes = Math.floor((seconds % 3600) / 60);
+          let secs = seconds % 60;
+          return `${hours}h ${minutes}m ${secs}s`;
+        }
+
+        function tick() {
+          document.getElementById("uptime").textContent = formatUptime(uptimeSeconds);
+          uptimeSeconds++;
+        }
+
+        setInterval(tick, 1000);
+        tick(); // initial render
+        </script>
 
         </body>
         </html>""")
         return render_template_string(html, summary=summary, 
                                       limit=status.history_limit,
+                                      uptime=status.uptime(),
                                       headline_class=headline_class,
                                       headline_text=headline_text)
 
