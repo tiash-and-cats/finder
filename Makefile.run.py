@@ -17,14 +17,18 @@ import subprocess
 import sys
 import os
 import logging
-import urllib3
+import httpx
+import asyncio
 import traceback
 import textwrap
 import threading
-import logging
 import time
-from whitenoise import WhiteNoise
-from waitress import serve
+import platform
+import multiprocessing
+from servestatic import ServeStaticASGI
+from asgiref.wsgi import WsgiToAsgi
+import uvicorn
+
 from webob import Response
 from wsgiref import util
 
@@ -76,6 +80,7 @@ logging.basicConfig(
     level=logging.getLevelName(os.environ.get("LOGGING_LEVEL", "INFO")), 
     handlers=[handler]
 )
+logging.captureWarnings(True)
 
 logger = logging.getLogger("make")
 
@@ -83,12 +88,13 @@ class ReverseProxy:
     def __init__(self):
         sys.path.append("finder_proj")
         os.environ["DJANGO_DEBUG"] = "0"
-        from finder_proj.wsgi import application as finder_wsgi
-        self.finder_wsgi = finder_wsgi
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finder_proj.settings")
+        from finder_proj.asgi import application as finder_asgi
+        self.finder_asgi = finder_asgi
 
-        self.docs_wsgi = WhiteNoise(
-            finder_wsgi, prefix="docs/", root="./docs/build/html/",
-            index_file=True
+        self.docs_asgi = ServeStaticASGI(
+            self.finder_asgi, root="./docs/build/html/",
+            prefix="docs/", index_file=True
         )
 
         self.status = Status()
@@ -96,9 +102,18 @@ class ReverseProxy:
         self.status.add_service("Find4U")
         self.status.add_service("Documentation")
         self.status.add_service("Status page")
-        self.status_wsgi = create_status_app(self.status)
+        
+        self.status_asgi = create_status_app(self.status)
 
-        self.http = urllib3.PoolManager(maxsize=20)
+        self.http = httpx.AsyncClient(
+            base_url="http://localhost:3000",
+            timeout=httpx.Timeout(
+                connect=5.0,    # fail fast if Next.js isn't listening
+                read=None,      # disable read timeout (can wait forever)
+                write=10.0,     # don't hang on request body upload
+                pool=5.0        # don't hang on connection pool acquisition
+            )
+        )
 
     def __enter__(self):
         logger.debug("Starting Next.js")
@@ -134,122 +149,148 @@ class ReverseProxy:
         logger.debug("ReverseProxy ready")
         return self
 
-    def find4u_wsgi(self, environ, start_response):
-        path   = environ.get("PATH_INFO", "")
-        method = environ.get("REQUEST_METHOD", "GET")
-        length = int(environ.get("CONTENT_LENGTH") or 0)
-        body   = environ["wsgi.input"].read(length) if length > 0 else None
+    async def find4u_asgi(self, scope, receive, send):
+        path = scope.get("path", "")
+        method = scope.get("method", "GET")
+        query = scope.get("query_string", b"").decode("latin1")
+        url = f"{path}?{query}" if query else path
 
-        url = f"http://localhost:3000{path}"
-
-        # Forward headers from Waitress -> Next.js
+        # Forward headers from Uvicorn -> Next.js (excluding hop-by-hop headers)
+        hop_by_hop = {"connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailers", "transfer-encoding", "upgrade"}
         headers = {}
-        for key, value in environ.items():
-            if key.startswith("HTTP_"):
-                header_name = key[5:].replace("_", "-").title()
-                if not util.is_hop_by_hop(header_name.lower()):
-                    headers[header_name] = value
-        if environ.get("CONTENT_TYPE"):
-            headers["Content-Type"] = environ["CONTENT_TYPE"]
-        if environ.get("CONTENT_LENGTH"):
-            headers["Content-Length"] = environ["CONTENT_LENGTH"]
+        for k, v in scope.get("headers", []):
+            header_name = k.decode("latin1").lower()
+            if header_name not in hop_by_hop:
+                headers[header_name] = v.decode("latin1")
 
-        # Make request with streaming enabled
+        async def req_body_generator():
+            while True:
+                message = await receive()
+                if message["type"] == "http.request":
+                    yield message.get("body", b"")
+                    if not message.get("more_body", False):
+                        break
+
         try:
-            resp = self.http.request(
-                method,
-                url,
-                body=body,
+            req = self.http.build_request(
+                method=method,
+                url=url,
                 headers=headers,
-                preload_content=False
+                content=req_body_generator()
             )
+            resp = await self.http.send(req, stream=True)
         except Exception as e:
             # Gracefully handle proxy errors
             traceback.print_exception(e)
-            status_line = "502 Bad Gateway"
-            response_headers = [("Content-Type", "text/plain")]
-            start_response(status_line, response_headers)
-            return [f"Oops! Proxy error: {e}".encode("utf-8")]
+            self.status.service_request("Find4U", "502 Bad Gateway")
+            err_headers = [(b"content-type", b"text/plain")]
+            await send({"type": "http.response.start", "status": 502, "headers": err_headers})
+            await send({"type": "http.response.body", "body": f"Oops! Proxy error: {e}".encode("utf-8")})
+            return
 
-        status_line = f"{resp.status} {resp.reason}"
-        response_headers = filter(
-            lambda x: not util.is_hop_by_hop(x[0]), resp.headers.items()
-        )
+        response_headers = [
+            (k.encode("latin1"), v.encode("latin1")) for k, v in resp.headers.items()
+            if k.lower() not in hop_by_hop
+        ]
 
-        # Streaming body iterator
-        def body_iter():
-            for chunk in resp.stream(amt=None):
-                if chunk:
-                    yield chunk
-            resp.release_conn()
+        await send({"type": "http.response.start", "status": resp.status_code, "headers": response_headers})
+        async for chunk in resp.aiter_raw():
+            await send({"type": "http.response.body", "body": chunk, "more_body": True})
+        await send({"type": "http.response.body", "body": b"", "more_body": False})
+        await resp.aclose()
 
-        start_response(status_line, response_headers)
-        return body_iter()
+    async def __call__(self, scope, receive, send):
+        # Pass non-HTTP operational events directly down to child apps
+        if scope["type"] != "http":
+            if scope["type"] == "lifespan":
+                while True:
+                    msg = await receive()
+                    if msg["type"] == "lifespan.startup":
+                        await send({"type": "lifespan.startup.complete"})
+                    elif msg["type"] == "lifespan.shutdown":
+                        await send({"type": "lifespan.shutdown.complete"})
+                        break
+            return
 
-    def __call__(self, environ, start_response):
-        path = environ.get('PATH_INFO', '')
+        path = scope.get('path', '')
 
         # default to Finder
-        wsgi = self.finder_wsgi
+        asgi = self.finder_asgi
         svc = "Finder"
 
         # if the request targets /find4u, give it to find4u
         if path.startswith("/find4u"):
-            wsgi = self.find4u_wsgi
+            asgi = self.find4u_asgi
             svc = "Find4U"
 
         # if the request targets /docs, redirect to /docs/
         if path == "/docs":
-            wsgi = Response()
-            wsgi.status = 301
-            wsgi.location = "/docs/"
             svc = "Documentation"
+            webob_resp = Response()
+            webob_resp.status = 301
+            webob_resp.location = "/docs/"
+            asgi = WsgiToAsgi(webob_resp)
 
-        # if the request targets /docs/, give it to WhiteNoise
+        # if the request targets /docs/, give it to ServeStaticASGI
         if path.startswith("/docs/"):
-            wsgi = self.docs_wsgi
+            asgi = self.docs_asgi
             svc = "Documentation"
 
         # if the request targets /status, give it to the status Flask app
         if path.startswith("/status"):
-            wsgi = self.status_wsgi
+            asgi = self.status_asgi
             svc = "Status page"
 
-        def start_res(status_line, headerlist):
-            log = f"{environ["REQUEST_METHOD"]} {path} {status_line!r}"
-            
-            code = int(status_line.split(" ", 1)[0])
-            
-            if code < 400:
-                logger.info(log)
-            elif code < 500:
-                logger.warning(log)
-            else:
-                logger.error(log)
-            
-            self.status.service_request(svc, status_line)
-            return start_response(status_line, [
-                ("via", f"{environ.get("SERVER_PROTOCOL", "HTTP/unknown")} "
-                f"Finderservices-Orchestration-{finder_buildinfo.BUILDDATE}-"
-                f"{finder_buildinfo.BUILDBRANCH}-{finder_buildinfo.BUILDCOMMIT
-                }"), *headerlist
-            ])
+        async def isend(message):
+            if message["type"] == "http.response.start":
+                status_code = message.get("status", 200)
+                status_line = f"{status_code} Status"
+                
+                self.status.service_request(svc, status_line)
+                
+                via_string = f"HTTP/{scope.get('http_version', '1.1')} " \
+                             f"Finderservices-Orchestration-{
+                               finder_buildinfo.BUILDDATE}-{
+                               finder_buildinfo.BUILDBRANCH}-{
+                               finder_buildinfo.BUILDCOMMIT}"
+                headers = list(message.get("headers", []))
+                headers.append((b"via", via_string.encode("latin1")))
+                message["headers"] = headers
+                
+            await send(message)
 
-        return wsgi(environ, start_res)
+        await asgi(scope, receive, isend)
 
     def __exit__(self, *_):
         self.find4u_popen.terminate()
         self.find4u_popen.wait()
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(self.http.aclose())
+            else:
+                loop.run_until_complete(self.http.aclose())
+        except Exception:
+            pass
 
 def main():
+    logging.getLogger('uvicorn').setLevel(logging.INFO)
+
     with ReverseProxy() as app:
-        port = os.environ.get("PORT", 80)
+        port = int(os.environ.get("PORT", 80))
 
         print()
         print(f"Listening on http://localhost:{port}")
         print(__doc__.split("\n", 2)[-1])
+        
         try:
-            serve(app, listen=f"*:{port}")
+            uvicorn.run(
+                app,
+                host="0.0.0.0",
+                port=port,
+                log_config=None,
+                loop="auto"
+            )
         except KeyboardInterrupt:
             print("Exited")
 

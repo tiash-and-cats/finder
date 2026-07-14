@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template_string, Response
+from quart import Quart, jsonify, render_template_string, Response
 from datetime import datetime
 import textwrap
 
@@ -17,10 +17,8 @@ class Status:
         except (IndexError, ValueError) as e:
             raise ValueError(f"Invalid status {status!r}") from e
         
-        healthy = code < 500 # 40x is considered healthy because it's not our
-                             # fault so we don't need to worry about it!
+        healthy = code < 500
         self.services[name].append(healthy)
-        # trim history
         if len(self.services[name]) > self.history_limit:
             self.services[name].pop(0)
     
@@ -42,7 +40,8 @@ class Status:
             for name, results in self.services.items()
         }
         
-    def uptime(self): return datetime.utcnow() - self.start_time
+    def uptime(self): 
+        return datetime.utcnow() - self.start_time
     
     def json(self):
         return {
@@ -52,7 +51,7 @@ class Status:
             "services": self.service_summary()
         }
 
-def create_app(status):
+def create_app(status: Status):
     def headline_class_and_text():
         rate = status.success_rate()
         if rate is None:
@@ -64,19 +63,20 @@ def create_app(status):
         else:
             return "sad", "Not all systems operational..."
 
-    app = Flask(__name__)
+    app = Quart(__name__)
 
     @app.route("/status/api")
-    def status_json():
+    async def status_json():
         return jsonify(status.json())
         
     @app.route("/status/styleguide.css")
-    def styleguide():
+    async def styleguide():
         with open("STYLEGUIDE.css") as f:
-            return Response(f.read(), mimetype="text/css")
+            css = f.read()
+        return Response(css, mimetype="text/css")
 
     @app.route("/status")
-    def status_html():
+    async def status_html():
         summary = status.service_summary()
         headline_class, headline_text = headline_class_and_text()
         html = textwrap.dedent("""\
@@ -230,10 +230,13 @@ def create_app(status):
         
         </body>
         </html>""")
-        return render_template_string(html, summary=summary, 
-                                      limit=status.history_limit,
-                                      uptime=status.uptime(),
-                                      headline_class=headline_class,
-                                      headline_text=headline_text)
+        return await render_template_string(
+            html,
+            summary=summary,
+            limit=status.history_limit,
+            uptime=status.uptime(),
+            headline_class=headline_class,
+            headline_text=headline_text
+        )
 
     return app

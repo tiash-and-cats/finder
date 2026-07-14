@@ -51,13 +51,12 @@ INSTALLED_APPS = [
 if DEBUG:
     # Install some more apps in dev
     INSTALLED_APPS.extend([
-        "jazzmin",
         'django.contrib.admin',
     ])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    "servestatic.middleware.ServeStaticMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -139,45 +138,3 @@ STATIC_ROOT = BASE_DIR / 'staticprod'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Jazzmin settings
-JAZZMIN_SETTINGS = {
-    "show_ui_builder": False,
-    "site_logo": "favicon.svg",
-    "login_logo": "logo.svg",
-    "welcome_sign": "Welcome to the admin interface. If you're not a developer"
-                    ", please, just... quietly walk away.",
-    "copyright": "tiash-and-cats",
-}
-
-JAZZMIN_UI_TWEAKS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": False,
-    "accent": "accent-primary",
-    "navbar": "navbar-white navbar-light",
-    "no_navbar_border": False,
-    "navbar_fixed": False,
-    "layout_boxed": False,
-    "footer_fixed": False,
-    "sidebar_fixed": False,
-    "sidebar": "sidebar-dark-primary",
-    "sidebar_nav_small_text": False,
-    "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": False,
-    "sidebar_nav_compact_style": False,
-    "sidebar_nav_legacy_style": False,
-    "sidebar_nav_flat_style": False,
-    "theme": "cosmo",
-    "default_theme_mode": "dark",
-    "button_classes": {
-        "primary": "btn-primary",
-        "secondary": "btn-secondary",
-        "info": "btn-info",
-        "warning": "btn-warning",
-        "danger": "btn-danger",
-        "success": "btn-success"
-    }
-}
