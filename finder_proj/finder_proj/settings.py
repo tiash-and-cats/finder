@@ -36,8 +36,6 @@ ALLOWED_HOSTS = ["*", "[::]"]
 
 INSTALLED_APPS = [
     # Django installed these, not me!
-    "jazzmin", # Well, I guess I installed this one.
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -49,6 +47,13 @@ INSTALLED_APPS = [
     "api",
     "django.contrib.humanize",
 ]
+
+if DEBUG:
+    # Install some more apps in dev
+    INSTALLED_APPS.extend([
+        "jazzmin",
+        'django.contrib.admin',
+    ])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -142,6 +147,7 @@ JAZZMIN_SETTINGS = {
     "login_logo": "logo.svg",
     "welcome_sign": "Welcome to the admin interface. If you're not a developer"
                     ", please, just... quietly walk away.",
+    "copyright": "tiash-and-cats",
 }
 
 JAZZMIN_UI_TWEAKS = {

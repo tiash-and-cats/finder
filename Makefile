@@ -9,6 +9,10 @@ endif
 PORT=80
 SYS_PYTHON=python
 
+DOCKER_IMAGE_NAME=finder
+
+LOGGING_LEVEL=INFO
+
 ifneq ($(wildcard Makefile.secret),)
 include Makefile.secret
 # A Makefile.secret must define:
@@ -53,9 +57,15 @@ run: deps
 		exit 1; \
 	fi
 	@# Run the Python runner
-	PORT=$(PORT) $(VENV_BIN)/python Makefile.run.py
+	LOGGING_LEVEL=$(LOGGING_LEVEL) PORT=$(PORT) $(VENV_BIN)/python Makefile.run.py
 
 Makefile.secret: | deps
 	$(VENV_BIN)/python Makefile.secret.generate.py
 	
+docker-build:
+	docker build -t $(DOCKER_IMAGE_NAME) .
+
+docker-run:
+	docker run -p 80:80 -e OPENROUTER_KEY='$(OPENROUTER_KEY)' -e DJANGO_SECRET_KEY=$(DJANGO_SECRET_KEY) $(DOCKER_IMAGE_NAME)
+
 .PHONY: deps run finder find4u

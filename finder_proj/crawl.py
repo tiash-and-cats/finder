@@ -124,38 +124,38 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
     except UnicodeDecodeError:
         print(f"{' '*(indent+INDENT)}failed to decode page, returning")
         return
-    if not info["lang"].startswith("en"):
+    if not info.lang.startswith("en"):
         print(f"{' '*(indent+INDENT)}language is not English, returning")
         return
     if not Indexed.objects.all().filter(url=parsed.geturl()).exists():
         Indexed(
            url = parsed.geturl(), 
-           desc = info["desc"], 
-           keywds = info["keywds"], 
-           title = info["title"], 
+           desc = info.desc, 
+           keywds = info.keywds, 
+           title = info.title, 
            rank = 1, 
-           content = info["content"],
-           favicon = info["favicon"],
+           content = info.content,
+           favicon = info.favicon,
         ).save()
         print(f"{' '*(indent+INDENT)}new site {parsed.geturl()} added")
     else:
         page = Indexed.objects.get(url=parsed.geturl())
         page.rank += 1
-        if (page.title is None or page.title == parsed.geturl()) and info["title"]:
-            page.title = info["title"]
+        if (page.title is None or page.title == parsed.geturl()) and info.title:
+            page.title = info.title
             print(f"{' '*(indent+INDENT)}site {parsed.geturl()} title added")
-        if page.favicon is None and info["favicon"]:
-            if is_relative(info["favicon"]):
-                page.favicon = urllib.parse.urljoin(get_parent_url(parsed.geturl()), info["favicon"])
+        if page.favicon is None and info.favicon:
+            if is_relative(info.favicon):
+                page.favicon = urllib.parse.urljoin(get_parent_url(parsed.geturl()), info.favicon)
             else:
-                page.favicon = info["favicon"]
+                page.favicon = info.favicon
             print(f"{' '*(indent+INDENT)}site {parsed.geturl()} favicon added")
         page.save()
         print(f"{' '*(indent+INDENT)}site {parsed.geturl()} rank++")
         if not first:
             return
     prev = None
-    for x in info["links"]:
+    for x in info.links:
         crawl(x, parsed.geturl(), depth + 1, indent + INDENT, False, prev)
         prev = x
     #time.sleep(random.randint(2, 5))
@@ -197,15 +197,9 @@ def getinfo(url, text, is_root=False):
     if not is_root and NAVBAR_SIGNATURE:
         parser.links = [x for x in parser.links if x not in NAVBAR_SIGNATURE]
 
-    return {
-        "desc": parser.desc,
-        "keywds": parser.keywds,
-        "links": parser.links,
-        "title": parser.title,
-        "content": parser.content,
-        "lang": parser.lang,
-        "favicon": parser.favicon,
-    }
+    parser.content = re.sub(r'\s+', ' ', parser.content).strip()
+
+    return parser
 
 # a single class
 class Parser(html.parser.HTMLParser):

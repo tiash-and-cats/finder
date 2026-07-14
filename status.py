@@ -2,7 +2,7 @@ from flask import Flask, jsonify, render_template_string, Response
 from datetime import datetime
 import textwrap
 
-class Status:    
+class Status:
     def __init__(self, history_limit=100):
         self.services = {}
         self.start_time = datetime.utcnow()
@@ -180,7 +180,7 @@ def create_app(status):
         </style>
         </head>
         <body>
-
+        
         <h1 class="{{headline_class}}">{{headline_text}} <a class="home" href="/"><img src="/static/logo.svg"></a></h1>
         
         <p>Confused? See the docs <a href="/docs/user/status.html">here</a>.</p>
@@ -189,7 +189,7 @@ def create_app(status):
           <span id="uptime"></span>
           <noscript>{{uptime}}</noscript>
         </p>
-
+        
         {% for name, data in summary.items() %}
         <p><div class="card">
           <h2>{{name}}</h2>
@@ -227,7 +227,7 @@ def create_app(status):
         setInterval(tick, 1000);
         tick(); // initial render
         </script>
-
+        
         </body>
         </html>""")
         return render_template_string(html, summary=summary, 
