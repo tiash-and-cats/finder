@@ -155,13 +155,11 @@ class ReverseProxy:
         query = scope.get("query_string", b"").decode("latin1")
         url = f"{path}?{query}" if query else path
 
-        # Forward headers from Uvicorn -> Next.js (excluding hop-by-hop headers)
-        hop_by_hop = {"connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailers", "transfer-encoding", "upgrade"}
+        # Forward headers from Uvicorn -> Next.js
         headers = {}
         for k, v in scope.get("headers", []):
             header_name = k.decode("latin1").lower()
-            if header_name not in hop_by_hop:
-                headers[header_name] = v.decode("latin1")
+            headers[header_name] = v.decode("latin1")
 
         async def req_body_generator():
             while True:
