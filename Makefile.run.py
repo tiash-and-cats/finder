@@ -38,12 +38,20 @@ from status import Status, create_app as create_status_app
 NO_COLOR = bool(os.environ.get("NO_COLOR") or not sys.stdout.isatty())
 
 def sfcol(ansi):
+    """
+    Wraps ANSI escapes so that they respect NO_COLOR and checks if sys.stdout
+    is a TTY. If NO_COLOR is not defined and sys.stdout is a TTY, then returns
+    the escape sequence it was passed. Otherwise, returns an empty string.
+    """
     if NO_COLOR:
         return ""
     else:
         return ansi
 
 class ColorFormatter(logging.Formatter):
+    """
+    Adds nice colors to logging.
+    """
     COLORS = {
         logging.DEBUG: sfcol("\x1b[1;32m"),    # green
         logging.INFO: sfcol("\x1b[1;34m"),     # blue
@@ -56,6 +64,10 @@ class ColorFormatter(logging.Formatter):
     DIM    = sfcol("\x1b[2m")
 
     def formatException(self, exc_info):
+        """
+        Format an exception. If NO_COLOR is False, returns a colorized
+        traceback, otherwise a non-colorized one.
+        """
         if NO_COLOR:
             r = traceback.format_exception(*exc_info)
         else:
@@ -63,6 +75,9 @@ class ColorFormatter(logging.Formatter):
         return "".join(r).strip()
 
     def format(self, record):
+        """
+        Format a record. The format is hardcoded here.
+        """
         color = self.COLORS.get(record.levelno, self.RESET)
         log_line = (
             f"{self.BOLD}{record.name}{self.RESET} - "
@@ -85,6 +100,11 @@ logging.captureWarnings(True)
 logger = logging.getLogger("make")
 
 class ReverseProxy:
+    """
+    The main class in this file. This class is a context manager that acts as
+    an ASGI app that serves Finder Services.
+    """
+    
     def __init__(self):
         sys.path.append("finder_proj")
         os.environ["DJANGO_DEBUG"] = "0"
@@ -116,6 +136,17 @@ class ReverseProxy:
         )
 
     def __enter__(self):
+        """
+        Launches the Next.js frontend process for Find4U and waits until it is 
+        ready.
+        
+        It starts the Next.js server as a subprocess, monitors its output 
+        until it looks ready, and then returns the proxy instance.
+        
+        This is a special method invoked when entering a context manager.
+        For details, see:
+            https://docs.python.org/3/reference/datamodel.html#object.__enter__
+        """
         logger.debug("Starting Next.js")
         
         self.find4u_popen = subprocess.Popen(
@@ -150,6 +181,22 @@ class ReverseProxy:
         return self
 
     async def find4u_asgi(self, scope, receive, send):
+        """
+        ASGI application that proxies requests to the Find4U Next.js frontend.
+
+        This method accepts the standard ASGI parameters: a connection scope
+        dictionary with path, method, headers, and query string; a coroutine
+        to receive incoming HTTP request events; and a coroutine to send
+        responses back to the client. 
+        
+        It forwards the request headers and body to the Next.js server, 
+        streams the response back to the caller, and handles proxy errors 
+        gracefully by returning a 502 Bad Gateway response.
+        
+        You usually don't need to call this directly. Just call the
+        ReverseProxy instance instead. It will automatically use this
+        method if needed.
+        """
         path = scope.get("path", "")
         method = scope.get("method", "GET")
         query = scope.get("query_string", b"").decode("latin1")
@@ -198,6 +245,23 @@ class ReverseProxy:
         await resp.aclose()
 
     async def __call__(self, scope, receive, send):
+        """
+        This special method makes the class itself callable as an ASGI app. 
+        For more information, see:
+            https://docs.python.org/3/reference/datamodel.html#object.__call__
+
+        Incoming HTTP requests are routed to the appropriate service based
+        on their path: 
+            - requests beginning with /find4u are proxied to the Find4U 
+              Next.js frontend, 
+            - those under /docs are served from the documentation build, 
+            - and those under /status are handled by the status monitoring 
+              app.
+        
+        All other requests default to the Finder Django backend. Each 
+        response is annotated with a custom Via header containing build
+        metadata before being returned to the client.
+        """
         # Pass non-HTTP operational events directly down to child apps
         if scope["type"] != "http":
             if scope["type"] == "lifespan":
@@ -260,6 +324,19 @@ class ReverseProxy:
         await asgi(scope, receive, isend)
 
     def __exit__(self, *_):
+        """
+        Cleans up resources when leaving the ReverseProxy context.
+        
+        This is the companion to __enter__, called when leaving the context 
+        manager.
+        For more information, see:
+            https://docs.python.org/3/reference/datamodel.html#object.__exit__
+
+        This method terminates the Next.js subprocess that was started in
+        __enter__, then closes the httpx client used for proxying requests.
+        It handles both synchronous and asynchronous event loops gracefully
+        to ensure that shutdown does not leave dangling tasks or open sockets.
+        """
         self.find4u_popen.terminate()
         self.find4u_popen.wait()
         try:
@@ -272,6 +349,7 @@ class ReverseProxy:
             pass
 
 def main():
+    """Entry point."""
     logging.getLogger('uvicorn').setLevel(logging.INFO)
 
     with ReverseProxy() as app:

@@ -1,8 +1,12 @@
+"""
+A Quart app that serves the status page.
+"""
 from quart import Quart, jsonify, render_template_string, Response
 from datetime import datetime
 import textwrap
 
 class Status:
+    """A class that stores service's success rates among other things."""
     def __init__(self, history_limit=100):
         self.services = {}
         self.start_time = datetime.utcnow()
@@ -52,6 +56,7 @@ class Status:
         }
 
 def create_app(status: Status):
+    """Create a Quart app from a Status instance."""
     def headline_class_and_text():
         rate = status.success_rate()
         if rate is None:

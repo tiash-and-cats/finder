@@ -109,12 +109,20 @@ A joint Finder and Find4U image is available at `docker.io/tiashdev/finder:lates
 
 To build your own Docker image, run in the repo root:
 ``` sh
-docker build -t <img name> .
+make docker-build
 ```
 
 To run it, run:
 ``` sh
-docker run -p 80:80 -e DJANGO_SECRET_KEY="<your-secret-key>" -e OPENROUTER_KEY=\"<sk-or-v1-SECRET-KEY>\" <img name>
+make docker-run
 ```
 
 Note that it copies your database (`db.sqlite3`) over to the container too.
+
+## Conclusion
+
+This guide just touches the surface. You can get more information using:
+
+```
+make help
+```

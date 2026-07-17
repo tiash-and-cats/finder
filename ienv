@@ -1,2 +1,1 @@
-#!/usr/bin/env sh 
-. ./env/scripts/activate && sh 
+. ./env/scripts/activate
