@@ -101,8 +101,8 @@ logger = logging.getLogger("make")
 
 class ReverseProxy:
     """
-    The main class in this file. This class is a context manager that acts as
-    an ASGI app that serves Finder Services.
+    The main class in this file. This class is an async context manager that 
+    acts as an ASGI app that serves Finder Services.
     """
     
     def __init__(self):
@@ -135,7 +135,7 @@ class ReverseProxy:
             )
         )
 
-    def __enter__(self):
+    async def __aenter__(self):
         """
         Launches the Next.js frontend process for Find4U and waits until it is 
         ready.
@@ -149,28 +149,31 @@ class ReverseProxy:
         """
         logger.debug("Starting Next.js")
         
-        self.find4u_popen = subprocess.Popen(
-            [shutil.which("npx"), "next", "start"],
+        self.find4u_popen = await asyncio.create_subprocess_exec(
+            shutil.which("npx"), "next", "start",
             cwd="./find4u/web",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env={**os.environ, "PORT": "3000"},
         )
 
-        ready_event = threading.Event()
+        ready_event = asyncio.Event()
 
-        def reader():
-            for line in self.find4u_popen.stdout:
-                line = line.decode("utf-8")
-                print(line, end="", flush=True)
-                if "Ready" in line:
+        async def reader():
+            while True:
+                line = await self.find4u_popen.stdout.readline()
+                if not line:
+                    break
+                line_str = line.decode("utf-8")
+                print(line_str, end="", flush=True)
+                if "Ready" in line_str:
                     ready_event.set()
 
-        threading.Thread(target=reader, daemon=True).start()
+        asyncio.create_task(reader())
 
-        # Block until we see "Ready"
-        ready_event.wait()
+        # Clean async wait boundary replacing threading event blockades
+        await ready_event.wait()
 
         logger.debug("Next.js ready")
 
@@ -234,8 +237,8 @@ class ReverseProxy:
             return
 
         response_headers = [
-            (k.encode("latin1"), v.encode("latin1")) for k, v in resp.headers.items()
-            if k.lower() not in hop_by_hop
+            (k.encode("latin1"), v.encode("latin1")) for k, v in \
+            resp.headers.items()
         ]
 
         await send({"type": "http.response.start", "status": resp.status_code, "headers": response_headers})
@@ -323,52 +326,50 @@ class ReverseProxy:
 
         await asgi(scope, receive, isend)
 
-    def __exit__(self, *_):
+    async def __aexit__(self, *_):
         """
         Cleans up resources when leaving the ReverseProxy context.
         
         This is the companion to __enter__, called when leaving the context 
         manager.
         For more information, see:
-            https://docs.python.org/3/reference/datamodel.html#object.__exit__
+            https://docs.python.org/3/reference/datamodel.html
+            #object.__exit__
 
         This method terminates the Next.js subprocess that was started in
         __enter__, then closes the httpx client used for proxying requests.
-        It handles both synchronous and asynchronous event loops gracefully
-        to ensure that shutdown does not leave dangling tasks or open sockets.
         """
-        self.find4u_popen.terminate()
-        self.find4u_popen.wait()
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                loop.create_task(self.http.aclose())
-            else:
-                loop.run_until_complete(self.http.aclose())
-        except Exception:
-            pass
+            self.find4u_popen.terminate()
+        except ProcessLookupError:
+            print("Find4U seems to be already terminated, ignoring")
+        await self.find4u_popen.wait()
+        await self.http.aclose()
 
-def main():
+async def main():
     """Entry point."""
     logging.getLogger('uvicorn').setLevel(logging.INFO)
 
-    with ReverseProxy() as app:
+    async with ReverseProxy() as app:
         port = int(os.environ.get("PORT", 80))
 
         print()
         print(f"Listening on http://localhost:{port}")
         print(__doc__.split("\n", 2)[-1])
         
-        try:
-            uvicorn.run(
-                app,
-                host="0.0.0.0",
-                port=port,
-                log_config=None,
-                loop="auto"
-            )
-        except KeyboardInterrupt:
-            print("Exited")
+        config = uvicorn.Config(
+            app,
+            host="127.0.0.1" if platform.system() == "Windows" else "0.0.0.0",
+            port=port,
+            log_config=None,
+            loop="auto"
+        )
+        server = uvicorn.Server(config)
+        
+        await server.serve()
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Gracefully exiting...")

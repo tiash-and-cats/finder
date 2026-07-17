@@ -1,48 +1,49 @@
-"""
+r"""
 Finder Makefile help interface.
 
 (!!) Please don't run this script directly. Use 'make help' instead.
 
 PROTIP: If you just want to know how to use it, not how it works, see
-'make help ON=help'.
+`'make help ON=help'`.
 
 This script implements a help system that extracts documentation directly
 from the Makefile itself. The Makefile is annotated so that comments placed
 immediately above a target definition are treated as that target's description.
 
-Lines beginning with ':variables:' declare which variables the target accepts. 
+Lines beginning with `':variables:'` declare which variables the target accepts. 
 This is modeled after Python docstrings.
 
-Lines beginning with '(!!)' are warnings and are emboldened. The '(!!)' is
+Lines beginning with `'(!!)'` are warnings and are emboldened. The `'(!!)'` is
 underlined, too.
 
-Lines beginning with 'PROTIP:' are tips and the 'PROTIP:' keyword is
+Lines beginning with `'PROTIP:'` are tips and the `'PROTIP:'` keyword is
 emboldened and underlined, while the rest of the line is emboldened.
 
-`...` segments are considered code and emboldened.
+\`...\` segments and lines beginning with `':'` are considered code and
+emboldened.
 
 Blank lines reset the comment/variable buffer so that only contiguous
 annotations are associated with the next target.
 
 Here's an example:
 
-    NAME=world
-    
-    # This rule prints a greeting.
-    #
-    # Use the variable NAME to choose who to greet. It defaults to 'world'.
-    #
-    # :variables: NAME
-    greet:
-        echo Hello $(NAME)!
+:    NAME=world
+:    
+:    # This rule prints a greeting.
+:    #
+:    # Use the variable NAME to choose who to greet. It defaults to 'world'.
+:    #
+:    # :variables: NAME
+:    greet:
+:        echo Hello $(NAME)!
 
 This is rendered as:
 
-    make greet [NAME=...]
-    
-        This rule prints a greeting.
-        
-        Use the variable NAME to choose who to greet. It defaults to 'world'.
+:    make greet [NAME=...]
+:    
+:        This rule prints a greeting.
+:        
+:        Use the variable NAME to choose who to greet. It defaults to 'world'.
 
 It uses Pydoc to get help on Python scripts.
 """
@@ -56,7 +57,7 @@ import pydoc
 from contextlib import contextmanager
 from pathlib import Path
 
-CODE_RE = re.compile("(?:`)(.*?)(?:`)")
+CODE_RE = re.compile(r"(?<!\\)`(.*?)`")
 
 class Just:
     """Namespace of helpers for justifying text."""
@@ -98,9 +99,10 @@ def bu(text):
 
 class Pager:
     """
-    A wrapper around pydoc.pager that redirects sys.stdout to a StringIO
-    upon entering the context manager, and captures the output before
-    paging it using pydoc.pager upon exit with a custom header.
+    A wrapper around `pydoc.pager` that redirects `sys.stdout` to an 
+    `io.StringIO` upon entering the context manager, and captures
+    the output before paging it using `pydoc.pager` upon exit with
+    a custom header.
     """
     
     def __enter__(self):
@@ -134,7 +136,7 @@ class Pager:
         
         txt = Just.space_between(
             [u(self.heading), "Finder Makefile help interface", u(self.heading)],
-            sz.columns + (len(self.heading) * 4)
+            sz.columns + (len(self.heading) * 4) # adjust for overstrike
         )
         
         txt += "\n" + ("\n" if os.name != "nt" else "")
@@ -150,6 +152,32 @@ def ddent(txt):
     return "\n".join(
         [" ".join(line.split()) for line in textwrap.dedent(txt).split("\n")
     ])
+
+def fmt_docln(line):
+    line = CODE_RE.sub(lambda m: b(m[1]), line)
+    
+    if line.startswith("(!!)"):
+        line = bu("(!!)") + b(line.removeprefix("(!!)"))
+    elif line.startswith("PROTIP:"):
+        line = bu("PROTIP:") + line.removeprefix("PROTIP:")
+    elif line.startswith(":"):
+        line = b(line[1:])
+    
+    return line
+    
+def getdoc(object):
+    """
+    Get the doc string or comments for an object and also styles it.
+    This overrides `pydoc.getdoc`.
+    """
+    import inspect
+    result = pydoc._getdoc(object) or inspect.getcomments(object)
+    result = result and re.sub('^ *\n', '', result.rstrip()) or ''
+    result = "\n".join(map(fmt_docln, result.split("\n")))
+    result = result.replace(r"\`", "`")
+    return result
+
+pydoc.getdoc = getdoc
 
 def parse_makefile(filepath="Makefile"):
     """
@@ -169,19 +197,13 @@ def parse_makefile(filepath="Makefile"):
             line = line.strip()
             if line.startswith("#"):
                 line = line.lstrip("#").strip()
-                line = CODE_RE.sub(lambda m: b(m[1]), line)
                 
                 if line.startswith(":variables:"):
                     variables.extend(
                         line.removeprefix(":variables:").strip().split()
                     )
-                elif line.startswith("(!!)"):
-                    comments.append(bu("(!!)") + b(line.removeprefix("(!!)")))
-                elif line.startswith("PROTIP:"):
-                    comments.append(bu("PROTIP:") + 
-                                    line.removeprefix("PROTIP:"))
                 else:
-                    comments.append(line)
+                    comments.append(fmt_docln(line))
             elif match := target_pattern.match(line):
                 name = match.group(1)
                 targets[name] = (
