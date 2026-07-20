@@ -8,3 +8,24 @@ h2 {
 .sphinxsidebarwrapper .search {
   margin-top: 0;
 }
+
+.body a:has(img) {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  img {
+    width: 100%;
+  }
+}
+
+.body p:has(img) {
+  display: inline-flex;
+  justify-content: center;
+  img {
+    width: 100%;
+  }
+}
+
+.body figure, .body figure img {
+  width: 100%;
+}

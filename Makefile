@@ -25,7 +25,26 @@ endif
 
 # Installs dependencies. 
 #
-# Use the `SYS_PYTHON` variable to tell it which Python to use.
+# Use the `SYS_PYTHON` variable to tell it which Python to use to create the
+# virtual environment.
+#
+# If the `env` directory doesn't exist, it creates a Python virtual
+# environment called `env`.
+#
+# If the `node_modules` directory doesn't exist, it executes
+# `'npm init --init-type module -y'` and installs `zod` and `commander.js`
+# for generating the docs for the Find4U CLI.
+#
+# If the `find4u/cli/node_modules` folder doesn't exist but
+# `find4u/cli/ink-app/src` does, it goes into `find4u/cli` and runs
+# `'npm install'`.
+#
+# If the `find4u/cli/ink-app/node_modules` folder doesn't exist but
+# `find4u/cli/ink-app/src` does, it goes into `find4u/cli/ink-app` and runs
+# `'npm install'`.
+#
+# If the `find4u/web/node_modules` folder doesn't exist, it goes into
+# `find4u/web` and runs `'npm install'`.
 #
 # :variables: SYS_PYTHON
 deps:
@@ -50,13 +69,32 @@ deps:
 		npm install; \
 	fi
 
-# Build static files.
-build: deps
+# Migrate Finder database.
+build-finder-db:
 	cd finder_proj && .$(VENV_BIN)/python manage.py migrate
-	cd finder_proj && .$(VENV_BIN)/python manage.py collectstatic --noinput
+
+# Build Find4U static files.
+build-find4u:
 	cd find4u/web && npm run build
+
+# Build documentation.
+build-docs:
 	source $(VENV_BIN)/activate && cd docs && make
+
+# Generate finder-buildinfo.py.
+#
+# finder_buildinfo.py is how `'make run'` embeds build info in the `Via:`
+# header in production.
+build-finder_buildinfo:
 	python finder_buildinfo.generate.py
+
+# Build all static files and migrate Finder database.
+#
+# NOTE: This rule uses `'make deps'` to install dependencies before running.
+#
+# This runs `'make build-finder-db'`, `'make build-find4u'`, `'make build-docs'`, 
+# and `'make build-finder_buildinfo'`.
+build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 
 # Start the production server.
 #
@@ -65,7 +103,7 @@ build: deps
 # Use `LOGGING_LEVEL` to adjust the logging level. Possible values are `DEBUG`, `INFO`,
 # `WARNING`, `ERROR`, and `CRITICAL`. Defaults to `INFO`.
 #
-# Use `PORT` to change the port the server runs on. Defaults to `80`
+# Use `PORT` to change the port the server runs on. Defaults to `80`.
 #
 # For more technical details, see `'make help ON=Makefile.run.py'`.
 #
@@ -79,6 +117,8 @@ run: deps
 	LOGGING_LEVEL=$(LOGGING_LEVEL) PORT=$(PORT) $(VENV_BIN)/python Makefile.run.py
 
 # Interactively creates a Makefile.secret file.
+#
+# NOTE: This rule uses 'make deps' to install dependencies before running.
 Makefile.secret: | deps
 	$(VENV_BIN)/python Makefile.secret.generate.py
 	

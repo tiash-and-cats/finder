@@ -17,7 +17,10 @@ Lines beginning with `'(!!)'` are warnings and are emboldened. The `'(!!)'` is
 underlined, too.
 
 Lines beginning with `'PROTIP:'` are tips and the `'PROTIP:'` keyword is
-emboldened and underlined, while the rest of the line is emboldened.
+emboldened and underlined.
+
+Lines beginning with `'NOTE:'` are notes and the `'NOTE:'` keyword is
+emboldened and underlined.
 
 \`...\` segments and lines beginning with `':'` are considered code and
 emboldened.
@@ -150,8 +153,8 @@ def ident(txt, lvl=1):
 
 def ddent(txt):
     return "\n".join(
-        [" ".join(line.split()) for line in textwrap.dedent(txt).split("\n")
-    ])
+        [" ".join(line.split()) for line in textwrap.dedent(txt).split("\n")]
+    )
 
 def fmt_docln(line):
     line = CODE_RE.sub(lambda m: b(m[1]), line)
@@ -160,6 +163,8 @@ def fmt_docln(line):
         line = bu("(!!)") + b(line.removeprefix("(!!)"))
     elif line.startswith("PROTIP:"):
         line = bu("PROTIP:") + line.removeprefix("PROTIP:")
+    elif line.startswith("NOTE:"):
+        line = bu("NOTE:") + line.removeprefix("NOTE:")
     elif line.startswith(":"):
         line = b(line[1:])
     
@@ -256,6 +261,9 @@ def main():
                             sys.exit(0)
                 
                 p.heading = target
+                
+                # Prevent any ModuleNotFoundErrors from not being able
+                # to find modules
                 sys.path.append(str(Path(target).parent))
                 
                 with p.escape():
@@ -273,7 +281,7 @@ def main():
 
                 {u("Available rules:")}"""), 2))
             for t, (desc, _) in targets.items():
-                print(ident(f"{b(t.ljust(20))} {desc.split("\n")[0]}", 3))
+                print(ident(f"- {b(t.ljust(25))} {desc.split("\n")[0]}", 3))
             print(ident(ddent("""
                 Run 'make help ON=<target_name>' for focused info.
                 Run 'make help ON=<python_file.py>' for info about the specified script.

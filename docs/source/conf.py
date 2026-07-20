@@ -10,18 +10,16 @@ from better import better_theme_path
 from pathlib import Path
 
 project = 'Finder'
-copyright = '2026, tiash-and-cats'
+copyright = '2026, tiash-and-cats, under the GNU GPLv3'
 author = 'tiash-and-cats'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser']
+extensions = ['myst_parser', 'notfound.extension']
 
 templates_path = ['_templates']
 exclude_patterns = []
-
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -38,3 +36,6 @@ html_theme_options = {
 html_sidebars = {
     '**': ['localtoc.html', 'sourcelink.html', 'searchbox.html'],
 }
+
+# -- sphinx-notfound-page
+notfound_urls_prefix = "/docs/"

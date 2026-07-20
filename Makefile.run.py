@@ -17,6 +17,7 @@ import subprocess
 import sys
 import os
 import logging
+import http
 import httpx
 import asyncio
 import traceback
@@ -24,7 +25,7 @@ import textwrap
 import threading
 import time
 import platform
-import multiprocessing
+import aiofiles
 from servestatic import ServeStaticASGI
 from asgiref.wsgi import WsgiToAsgi
 import uvicorn
@@ -91,13 +92,14 @@ class ColorFormatter(logging.Formatter):
 
 handler = logging.StreamHandler()
 handler.setFormatter(ColorFormatter())
-logging.basicConfig(
-    level=logging.getLevelName(os.environ.get("LOGGING_LEVEL", "INFO")), 
-    handlers=[handler]
-)
+logging.basicConfig(level=logging.WARNING, handlers=[handler])
 logging.captureWarnings(True)
 
 logger = logging.getLogger("make")
+logger.setLevel(logging.getLevelName(os.environ.get("LOGGING_LEVEL", "INFO")))
+
+logging.getLogger("uvicorn.error").setLevel(logging.INFO)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 class ReverseProxy:
     """
@@ -112,10 +114,25 @@ class ReverseProxy:
         from finder_proj.asgi import application as finder_asgi
         self.finder_asgi = finder_asgi
 
-        self.docs_asgi = ServeStaticASGI(
-            self.finder_asgi, root="./docs/build/html/",
+        async def docs_fallback(self, scope, receive, send):
+            await send({
+                "type": "http.response.start", 
+                "status": 404, 
+                "headers": [(b"content-type", b"text/html")]
+            })
+            await send({
+                "type": "http.response.body",
+                "body": self.docs_notfound_html,
+                "more_body": False
+            })
+
+        self._ss_docs_asgi = ServeStaticASGI(
+            docs_fallback, root="./docs/build/html/",
             prefix="docs/", index_file=True
         )
+        
+        with open("docs/build/html/404.html", "rb") as f:
+            self.docs_notfound_html = f.read()
 
         self.status = Status()
         self.status.add_service("Finder")
@@ -134,6 +151,8 @@ class ReverseProxy:
                 pool=5.0        # don't hang on connection pool acquisition
             )
         )
+        
+        self.find4u_logger = logging.getLogger("make.nextjs")
 
     async def __aenter__(self):
         """
@@ -143,9 +162,9 @@ class ReverseProxy:
         It starts the Next.js server as a subprocess, monitors its output 
         until it looks ready, and then returns the proxy instance.
         
-        This is a special method invoked when entering a context manager.
+        This is a special method invoked when entering an async context manager.
         For details, see:
-            https://docs.python.org/3/reference/datamodel.html#object.__enter__
+            https://docs.python.org/3/reference/datamodel.html#object.__aenter__
         """
         logger.debug("Starting Next.js")
         
@@ -154,23 +173,26 @@ class ReverseProxy:
             cwd="./find4u/web",
             stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=asyncio.subprocess.PIPE,
             env={**os.environ, "PORT": "3000"},
         )
 
         ready_event = asyncio.Event()
 
-        async def reader():
+        async def reader(stream, cb):
             while True:
-                line = await self.find4u_popen.stdout.readline()
+                line = await stream.readline()
                 if not line:
                     break
                 line_str = line.decode("utf-8")
-                print(line_str, end="", flush=True)
+                cb(line_str.rstrip())
                 if "Ready" in line_str:
                     ready_event.set()
 
-        asyncio.create_task(reader())
+        asyncio.create_task(reader(
+            self.find4u_popen.stdout, self.find4u_logger.info))
+        asyncio.create_task(reader(
+            self.find4u_popen.stderr, self.find4u_logger.error))
 
         # Clean async wait boundary replacing threading event blockades
         await ready_event.wait()
@@ -230,10 +252,16 @@ class ReverseProxy:
         except Exception as e:
             # Gracefully handle proxy errors
             traceback.print_exception(e)
-            self.status.service_request("Find4U", "502 Bad Gateway")
             err_headers = [(b"content-type", b"text/plain")]
-            await send({"type": "http.response.start", "status": 502, "headers": err_headers})
-            await send({"type": "http.response.body", "body": f"Oops! Proxy error: {e}".encode("utf-8")})
+            await send({
+                "type": "http.response.start", 
+                "status": 502, 
+                "headers": err_headers
+            })
+            await send({
+                "type": "http.response.body",
+                "body": f"Oops! Proxy error: {e}".encode("utf-8")
+            })
             return
 
         response_headers = [
@@ -241,10 +269,25 @@ class ReverseProxy:
             resp.headers.items()
         ]
 
-        await send({"type": "http.response.start", "status": resp.status_code, "headers": response_headers})
+        await send({
+            "type": "http.response.start",
+            "status": resp.status_code,
+            "headers": response_headers
+        })
+        
         async for chunk in resp.aiter_raw():
-            await send({"type": "http.response.body", "body": chunk, "more_body": True})
-        await send({"type": "http.response.body", "body": b"", "more_body": False})
+            await send({
+                "type": "http.response.body",
+                "body": chunk, 
+                "more_body": True
+            })
+        
+        await send({
+            "type": "http.response.body",
+            "body": b"",
+            "more_body": False
+        })
+        
         await resp.aclose()
 
     async def __call__(self, scope, receive, send):
@@ -290,11 +333,11 @@ class ReverseProxy:
 
         # if the request targets /docs, redirect to /docs/
         if path == "/docs":
+            wsgi = Response()
+            wsgi.status = 301
+            wsgi.location = "/docs/"
+            asgi = WsgiToAsgi(wsgi)
             svc = "Documentation"
-            webob_resp = Response()
-            webob_resp.status = 301
-            webob_resp.location = "/docs/"
-            asgi = WsgiToAsgi(webob_resp)
 
         # if the request targets /docs/, give it to ServeStaticASGI
         if path.startswith("/docs/"):
@@ -309,7 +352,8 @@ class ReverseProxy:
         async def isend(message):
             if message["type"] == "http.response.start":
                 status_code = message.get("status", 200)
-                status_line = f"{status_code} Status"
+                status_line = f"{status_code} {http.HTTPStatus(status_code)\
+                                               .phrase}"
                 
                 self.status.service_request(svc, status_line)
                 
@@ -322,6 +366,15 @@ class ReverseProxy:
                 headers.append((b"via", via_string.encode("latin1")))
                 message["headers"] = headers
                 
+                log = f"{scope["method"]} {path} {status_line!r}"
+                
+                if status_code < 400:
+                    logger.info(log)
+                elif status_code < 500:
+                    logger.warning(log)
+                else:
+                    logger.error(log)
+                
             await send(message)
 
         await asgi(scope, receive, isend)
@@ -330,19 +383,19 @@ class ReverseProxy:
         """
         Cleans up resources when leaving the ReverseProxy context.
         
-        This is the companion to __enter__, called when leaving the context 
-        manager.
+        This is the companion to __aenter__, called when leaving the async 
+        context manager.
         For more information, see:
             https://docs.python.org/3/reference/datamodel.html
-            #object.__exit__
+            #object.__aexit__
 
         This method terminates the Next.js subprocess that was started in
-        __enter__, then closes the httpx client used for proxying requests.
+        __aenter__, then closes the httpx client used for proxying requests.
         """
         try:
             self.find4u_popen.terminate()
         except ProcessLookupError:
-            print("Find4U seems to be already terminated, ignoring")
+            logger.debug("Find4U seems to be already terminated, ignoring")
         await self.find4u_popen.wait()
         await self.http.aclose()
 
@@ -372,4 +425,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("Gracefully exiting...")
+        logger.info("Interrupted: Gracefully exiting...")
