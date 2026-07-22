@@ -23,8 +23,9 @@ import textwrap
 import threading
 import logging
 import time
+import smolurl
 from whitenoise import WhiteNoise
-from waitress import serve
+#from waitress import serve
 from webob import Response
 from wsgiref import util
 
@@ -249,7 +250,7 @@ def main():
         print(f"Listening on http://localhost:{port}")
         print(__doc__.split("\n", 2)[-1])
         try:
-            serve(app, listen=f"*:{port}")
+            smolurl.http_server(smolurl.wsgi_wrap(app), port=int(port))
         except KeyboardInterrupt:
             print("Exited")
 
