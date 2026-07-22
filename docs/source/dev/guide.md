@@ -94,7 +94,7 @@ The status page and status JSON API are built using Quart (an ASGI-native versio
 
 ### Reverse proxy
 
-Running `make` runs `<path-to-venv-python>/python Makefile.run.py` (the exact path depends on your OS). `Makefile.run.py` is the actual code that runs the server. It starts the Find4U Next.js server and then uses `uvicorn` to serve a ASGI application. The application:
+Running `make` runs `<path-to-venv-python>/python Makefile_run.py` (the exact path depends on your OS). `Makefile_run.py` is the actual code that runs the server. It starts the Find4U Next.js server and then uses `uvicorn` to serve a ASGI application. The application:
 
 - forwards all requests with the path starting with `find4u/` to the Next.js server running Find4U,
 - forwards all requests with the path starting with `docs/` to a [ServeStatic](https://archmonger.github.io/ServeStatic/latest/)[^1] ASGI application serving the docs,

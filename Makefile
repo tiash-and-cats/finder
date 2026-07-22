@@ -105,7 +105,7 @@ build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 #
 # Use `PORT` to change the port the server runs on. Defaults to `80`.
 #
-# For more technical details, see `'make help ON=Makefile.run.py'`.
+# For more technical details, see `'make help ON=Makefile_run.py'`.
 #
 # :variables: LOGGING_LEVEL PORT
 run: deps
@@ -114,7 +114,7 @@ run: deps
 		exit 1; \
 	fi
 	@# Run the Python runner
-	LOGGING_LEVEL=$(LOGGING_LEVEL) PORT=$(PORT) $(VENV_BIN)/python Makefile.run.py
+	LOGGING_LEVEL=$(LOGGING_LEVEL) PORT=$(PORT) $(VENV_BIN)/python Makefile_run.py
 
 # Interactively creates a Makefile.secret file.
 #
