@@ -126,7 +126,7 @@ class ReverseProxy:
                 "more_body": False
             })
 
-        self._ss_docs_asgi = ServeStaticASGI(
+        self.docs_asgi = ServeStaticASGI(
             docs_fallback, root="./docs/build/html/",
             prefix="docs/", index_file=True
         )
