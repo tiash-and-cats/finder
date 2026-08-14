@@ -64,7 +64,7 @@ You will notice that no pages have been indexed. You can do one of two things:
 
 - To index some pages, you must start the web crawler by cd-ing into `finder_proj` with the `env` virtual environment running (your prompt should have `(env)` in front of it) and running:
   ``` sh
-  python manage.py shell -c "import crawl; crawl.start_crawl('<seedfile>')"
+  python crawl.py <seedfile>
   ```
   Some seedfiles are given.
 
@@ -103,6 +103,8 @@ Running `make` runs `<path-to-venv-python>/python Makefile_run.py` (the exact pa
 
 When forwarding requests, it provides it's own version of `send` that checks if the message type is `"http.response.start"`, and if so,  logs the response into a `Status` object (see [Status page](#status-page)) before injecting a `Via: Finderservices-Orchestration/BUILDDATE-BUILDBRANCH-BUILDCOMMIT` header and calling the real `send`.
 
+There is also an error page that is rendered if something goes wrong at the proxy layer. It uses `cgitb` to render the traceback and hardcodes a Q&A to help the user.
+
 ## Docker
 
 A joint Finder and Find4U image is available at `docker.io/tiashdev/finder:latest`. This image does not utilize `Makefile.secret`; instead, the environment variables must be set manually. See your `Makefile.secret` for what variables to set or check the example earlier in this document.
@@ -127,4 +129,4 @@ This guide just touches the surface. You can get more information using:
 make help
 ```
 
-[^1] ServeStatic is an ASGI-native fork of WhiteNoise.
+[^1]: ServeStatic is an ASGI-native fork of WhiteNoise.

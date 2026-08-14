@@ -18,8 +18,7 @@ body {
   --search-padding-17px: 7; /* what the padding would be if --search-font-size was 17px, in px */
 
   /* we DON'T need to worry about this */
-  --search-magic-padding-num: calc(var(--search-padding-17px) / 17);
-  --search-padding: calc(var(--search-font-size) * var(--search-magic-padding-num));
+  --search-padding: calc(var(--search-font-size) * (var(--search-padding-17px) / 17));
 }
 
 h1, h2, h3, h4, h5, h6 {

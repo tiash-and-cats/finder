@@ -9,9 +9,9 @@ PROTIP: If you just want to know how to use it, not how it works, see
 This script implements a help system that extracts documentation directly
 from the Makefile itself. The Makefile is annotated so that comments placed
 immediately above a target definition are treated as that target's description.
-
-Lines beginning with `':variables:'` declare which variables the target accepts. 
 This is modeled after Python docstrings.
+
+Lines beginning with `':variables:'` declare which variables the target accepts.
 
 Lines beginning with `'(!!)'` are warnings and are emboldened. The `'(!!)'` is
 underlined, too.
@@ -169,20 +169,6 @@ def fmt_docln(line):
         line = b(line[1:])
     
     return line
-    
-def getdoc(object):
-    """
-    Get the doc string or comments for an object and also styles it.
-    This overrides `pydoc.getdoc`.
-    """
-    import inspect
-    result = pydoc._getdoc(object) or inspect.getcomments(object)
-    result = result and re.sub('^ *\n', '', result.rstrip()) or ''
-    result = "\n".join(map(fmt_docln, result.split("\n")))
-    result = result.replace(r"\`", "`")
-    return result
-
-pydoc.getdoc = getdoc
 
 def parse_makefile(filepath="Makefile"):
     """
