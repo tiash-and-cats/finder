@@ -1,3 +1,18 @@
-[Thu, 13 Aug 2026 23:03:41 GMT] Started crawl
-[Thu, 13 Aug 2026 23:03:41 GMT] parsed.path.rstrip("/"): /django
-[Thu, 13 Aug 2026 23:03:42 GMT] Ended crawl
+[Fri, 14 Aug 2026 15:23:35 GMT] Started crawl
+[Fri, 14 Aug 2026 15:23:35 GMT] parsed.path.rstrip("/"): 
+[Fri, 14 Aug 2026 15:23:35 GMT] parsed.path.rstrip("/"): /in/rbm-tiash/details/projects
+[Fri, 14 Aug 2026 15:23:36 GMT] parsed.path.rstrip("/"): /writing
+[Fri, 14 Aug 2026 15:23:37 GMT] parsed.path.rstrip("/"): /blog
+[Fri, 14 Aug 2026 15:23:38 GMT] parsed.path.rstrip("/"): /nvgif
+[Fri, 14 Aug 2026 15:23:39 GMT] parsed.path.rstrip("/"): /PopcornOS/popcorn-os
+[Fri, 14 Aug 2026 15:23:41 GMT] parsed.path.rstrip("/"): //writing
+[Fri, 14 Aug 2026 15:23:42 GMT] parsed.path.rstrip("/"): 
+[Fri, 14 Aug 2026 15:23:47 GMT] parsed.path.rstrip("/"): //blog
+[Fri, 14 Aug 2026 15:23:48 GMT] parsed.path.rstrip("/"): /2026/06/17/adding-an-rss-feed-to-my-blog.html 
+[Fri, 14 Aug 2026 15:23:48 GMT] parsed.path.rstrip("/"): /feed.xml
+[Fri, 14 Aug 2026 15:23:48 GMT] parsed.path.rstrip("/"): /2026/06/11/automating-lnkdin-posts-for-blog-pt-2.html 
+[Fri, 14 Aug 2026 15:23:48 GMT] parsed.path.rstrip("/"): /tiash-and-cats/tiash-and-cats.github.io/blob/master/.github/scripts/linkedin_share.py
+[Fri, 14 Aug 2026 15:23:51 GMT] parsed.path.rstrip("/"): /2026/06/10/creating-a-blog.html
+[Fri, 14 Aug 2026 15:23:52 GMT] parsed.path.rstrip("/"): /tiash-and-cats/tiash-and-cats.github.io
+[Fri, 14 Aug 2026 15:23:55 GMT] parsed.path.rstrip("/"): 
+[Fri, 14 Aug 2026 15:23:58 GMT] Ended crawl

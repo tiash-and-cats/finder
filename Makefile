@@ -7,12 +7,15 @@ else
 VENV_BIN=./env/bin
 endif
 
-PORT=80
 SYS_PYTHON=python
 
 DOCKER_IMAGE_NAME=finder
 
-LOGGING_LEVEL=INFO
+PORT=
+LOGGING_LEVEL=
+USE_ASYNCIO_LOOP=
+
+HELP=
 
 ifneq ($(wildcard Makefile.secret),)
 include Makefile.secret
@@ -23,7 +26,13 @@ else
 $(warning No Makefile.secret detected. You can choose to create one using the Makefile.secret rule. Or you can make it yourself.)
 endif
 
-# Installs dependencies. 
+# Shorthand help syntax
+ifneq ($(HELP),)
+%:
+	@$(MAKE) help "ON=$(MAKECMDGOALS)" HELP=
+else
+
+# Installs dependencies.
 #
 # Use the `SYS_PYTHON` variable to tell it which Python to use to create the
 # virtual environment.
@@ -51,6 +60,7 @@ deps:
 	@if [ ! -d env ]; then \
 		$(SYS_PYTHON) -m venv env; \
 		$(VENV_BIN)/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu; \
+		$(VENV_BIN)/pip install $(if $(filter Windows_NT,$(OS)),winloop,uvloop); \
 	fi
 	@if [ ! -d node_modules ]; then \
 		npm init --init-type module -y; \
@@ -92,7 +102,7 @@ build-finder_buildinfo:
 #
 # NOTE: This rule uses `'make deps'` to install dependencies before running.
 #
-# This runs `'make build-finder-db'`, `'make build-find4u'`, `'make build-docs'`, 
+# This runs `'make build-finder-db'`, `'make build-find4u'`, `'make build-docs'`,
 # and `'make build-finder_buildinfo'`.
 build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 
@@ -100,29 +110,79 @@ build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 #
 # (!!) Will fail without Makefile.secret. Please run 'make Makefile.secret' first.
 #
-# Use `LOGGING_LEVEL` to adjust the logging level. Possible values are `DEBUG`, `INFO`,
-# `WARNING`, `ERROR`, and `CRITICAL`. Defaults to `INFO`.
+# Use `PORT` to change the port the server runs on. Defaults to `80` if neither
+# `SSL_KEYFILE` nor `SSL_CERTFILE` are provided, otherwise `443`.
 #
-# Use `PORT` to change the port the server runs on. Defaults to `80`.
+# The default logging levels are:
+#     - `'make'`: `INFO`
+#     - `'uvicorn.error'`: `INFO`
+#     - `'uvicorn.access'`: `WARNING`
+#     - everything else: `WARNING`
+#
+# To adjust the logging, use `LOGGING_LEVEL`. You can pass four types of
+# strings to it:
+#
+#   - `Legacy mode:` A single logging level string[1], only controlling the `make`
+#     logger used by the reverse proxy.
+#
+#     Example: `make run LOGGING_LEVEL=DEBUG`
+#
+#   - `Comma-separated form:` A string of the form `'name=LEVEL, ...'` where
+#     `name` is the name of a logger and LEVEL is a logging level string[1].
+#
+#     Example: `make run LOGGING_LEVEL="httpx=DEBUG,make=DEBUG"`
+#
+#   - `The string "RESET":` Do not use the default logging levels listed above
+#     and just make the logging.basicConfig default `WARNING`.
+#
+#   - `Empty string:` Use the default logging levels listed above.
+#
+# `LOGGING_LEVEL` defaults to the empty string.
+#
+# NOTE: For `"RESET"`, other modules might change their logger's levels from
+# NOTE: the logging.basicConfig default, for example `'uvicorn'`.
+#
+# By default, it uses `winloop` on Windows, `uvloop` on POSIX, and `asyncio`
+# elsewhere as the event loop. Set `USE_ASYNCIO_LOOP` to any non-empty value
+# to force the standard `asyncio` loop, regardless of OS. You don't need to
+# understand this to run it, don't worry.
+#
+# (!!) "0" is considered truthy by Python, so `'USE_ASYNCIO_LOOP=0'` will
+# (!!) force `asyncio`. Use `'USE_ASYNCIO_LOOP='`.
+#
+# NOTE: Setting `'USE_ASYNCIO_LOOP='` will not "force uvloop/winloop". It
+# NOTE: simply means that `asyncio` will not be forced.
+#
+# SSL_KEYFILE and SSL_CERTFILE are for configuring SSL/TLS. Both are optional,
+# but if one is present, the other should be too. SSL_KEYFILE should be set
+# to the SSL key and SSL_CERTFILE should be set to the SSL certificate.
+#
+# An alternative approach would be to keep the core server insecure and
+# put a simple HTTPS-to-HTTP proxy in front; in fact, this is what the
+# official deployment at https://finder-locw.onrender.com/ does.
 #
 # For more technical details, see `'make help ON=Makefile_run.py'`.
 #
-# :variables: LOGGING_LEVEL PORT
+# [1] A logging level string is a string that describes the logging level.
+#     Possible values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
+#
+# :variables: LOGGING_LEVEL PORT USE_ASYNCIO_LOOP SSL_KEYFILE SSL_CERTFILE
 run: deps
 	@if [ ! -f Makefile.secret ]; then \
 		echo "No Makefile.secret found: run make Makefile.secret"; \
 		exit 1; \
 	fi
 	@# Run the Python runner
-	LOGGING_LEVEL=$(LOGGING_LEVEL) PORT=$(PORT) $(VENV_BIN)/python Makefile_run.py
+	LOGGING_LEVEL=$(LOGGING_LEVEL) PORT=$(PORT) USE_ASYNCIO_LOOP=$(USE_ASYNCIO_LOOP) \
+	SSL_KEYFILE=$(SSL_KEYFILE) SSL_CERTFILE=$(SSL_CERTFILE) $(VENV_BIN)/python Makefile_run.py
 
 # Interactively creates a Makefile.secret file.
 #
 # NOTE: This rule uses 'make deps' to install dependencies before running.
 Makefile.secret: | deps
 	$(VENV_BIN)/python Makefile.secret.generate.py
-	
-# Build a Docker image. 
+
+# Build a Docker image.
 #
 # Use the `DOCKER_IMAGE_NAME` variable to set the image name (defaults to `finder`).
 #
@@ -134,19 +194,23 @@ docker-build:
 #
 # Use `DOCKER_IMAGE_NAME` to set the image name (default: `finder`).
 #
-# PROTIP: Use `'make -n docker-run'` to see the command to run the image without 
+# PROTIP: Use `'make -n docker-run'` to see the command to run the image without
 # actually running the image.
 #
 # :variables: DOCKER_IMAGE_NAME
 docker-run:
 	docker run -p 80:80 -e OPENROUTER_KEY='$(OPENROUTER_KEY)' -e DJANGO_SECRET_KEY=$(DJANGO_SECRET_KEY) $(DOCKER_IMAGE_NAME)
 
-# Show help. 
+# Show help.
+#
+# The simplest usage of this rule is `'make <rule>|web HELP=1'`.
+# That is equivalent to `'make help <rule>|web'`. To pass variables
+# or get help on Python files you must use `'make help ON=...'`.
 #
 # Run `'make help ON=<rule>'` to get help on the Makefile rule <rule>.
 # Run `'make help ON=<script.py>'` to get help on a Python script.
 # Run `'make help ON=web'` to open the web hosted developer docs.
-# 
+#
 # You can use this help interface to figure out how things work
 # if you're confused about something. Not everything will be
 # documented, but most things will. You can also use other resources
@@ -161,4 +225,13 @@ docker-run:
 help:
 	@$(SYS_PYTHON) Makefile.help.py $(ON)
 
+# Freeze dependencies.
+#
+# DO NOT use `'pip freeze > requirements.txt'`: it will include either 
+# winloop or uvloop in the output, and depending on the next contributor's
+# system, it could break. Use this instead.
+freeze:
+	pip freeze --exclude winloop --exclude uvloop > requirements.txt
+
 .PHONY: deps run finder find4u help docker-build docker-run
+endif

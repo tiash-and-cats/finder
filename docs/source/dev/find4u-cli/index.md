@@ -1,8 +1,10 @@
 # Find4U CLI
 
 > **EPILEPSY WARNING:** The CLI can flicker. User discretion is advised. I am working to fix this.
+> The demo may appear more flickery than the actual CLI due to recording artifacts.
+> Please refrain from watching it if you have problems with that. I don't have money to pay a court case...
 
-[![Click here to see a demo!](./_static/screenshot.png)](https://asciinema.org/a/1257517)
+<script async id="asciicast-1257517" src="https://asciinema.org/a/1257517.js"></script>
 
 The Find4U CLI is your AI coding assistant. Currently, it can participate in conversations and read and write files.
 
@@ -14,7 +16,7 @@ To use it, simply run (with Node.js installed):
 npx find4u-cli
 ```
 
-If this is your first time running it, it will open the OpenRouter homepage and prompt you for an OpenRouter API key. Create an OpenRouter account and create an API key and enter it. Then you will be able to use the CLI normally. Ask it questions or type `/exit` to exit the CLI. [Here is a demo.](https://asciinema.org/a/1257517)
+If this is your first time running it, it will open the OpenRouter homepage and prompt you for an OpenRouter API key. Create an OpenRouter account and create an API key and enter it. Then you will be able to use the CLI normally. Ask it questions or type `/exit` to exit the CLI.
 
 ### Configuration
 

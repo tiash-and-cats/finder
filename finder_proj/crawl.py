@@ -59,13 +59,13 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
     parsed = parsed._replace(fragment="")
     if parsed.scheme == "":
         parsed = parsed._replace(scheme="https")
-    if parsed.path.find(".") > -1:
-        # Remove the last segment by trimming the path
-        new_path = "/".join(parsed.path.rstrip('/').split('/')[:-1]) + "/"
+    # if parsed.path.find(".") > -1:
+        # # Remove the last segment by trimming the path
+        # new_path = "/".join(parsed.path.rstrip('/').split('/')[:-1]) + "/"
         
-        # Construct the new URL
-        new_url = urllib.parse.urljoin(parsed.scheme + "://" + parsed.netloc, new_path)
-        parsed = urllib.parse.urlparse(new_url)
+        # # Construct the new URL
+        # new_url = urllib.parse.urljoin(parsed.scheme + "://" + parsed.netloc, new_path)
+        # parsed = urllib.parse.urlparse(new_url)
     parsed = parsed._replace(path=parsed.path.rstrip("/"))
     canonical = parsed.geturl()
     if canonical in visited:
@@ -78,7 +78,9 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
         print(f"{' '*(indent+INDENT)}reached maximum depth, returning")
         return
     robots = urllib.robotparser.RobotFileParser()
-    robots.set_url(urllib.parse.urljoin(parsed.scheme + "://" + parsed.netloc, "robots.txt"))
+    robots.set_url(urllib.parse.urljoin(
+        parsed.scheme + "://" + parsed.netloc, "robots.txt"
+    ))
     req = urllib.request.Request(parsed.geturl(), headers={"User-Agent": UA})
     try:
         robots.read()
@@ -89,10 +91,14 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
         if robots.can_fetch(UA, parsed.geturl()):
             res = urllib.request.urlopen(req)
             if not res.getheader("Content-Type", "").startswith("text/html"):
-                print(f"{' '*(indent+INDENT)}Content-Type is not text/html, returning")
+                print(f"{' '*(indent+INDENT)}Content-Type is not text/html,"
+                      f" returning")
                 return
             text = res.read()
-            enc = re.search(r'(?:encoding|charset)=([\w-]+)', res.getheader("Content-Type"))
+            enc = re.search(
+                r'(?:encoding|charset)=([\w-]+)', 
+                res.getheader("Content-Type")
+            )
             try:
                 enc = enc[1]
             except TypeError:
@@ -107,15 +113,18 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
         else:
             if retry_after_header := e.headers.get("Retry-After"):
                 if retry_after := parse_retry_after(retry_after):
-                    print(f"{' '*(indent+INDENT)}too many requests, trying again after {retry_after} secs")
+                    print(f"{' '*(indent+INDENT)}too many requests, trying "
+                          f"again after {retry_after} secs")
                     time.sleep(retry_after)
-                    crawl(url, orig, depth, indent, first, prevpath)
-                    return
+                    return crawl(url, orig, depth, indent, first, prevpath)
                 else:
-                    print(f"{' '*(indent+INDENT)}too many requests, invalid Retry-After value or Retry-After is a date, returning")
+                    print(f"{' '*(indent+INDENT)}too many requests, invalid"
+                          f" Retry-After value or Retry-After is a date, "
+                          f"returning")
                     return
             else:
-                print(f"{' '*(indent+INDENT)}too many requests, trying again after 5 secs")
+                print(f"{' '*(indent+INDENT)}too many requests, trying"
+                      f" again after 5 secs")
                 time.sleep(5)
                 crawl(url, orig, depth, indent, first, prevpath)
                 return
@@ -124,10 +133,20 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
     except UnicodeDecodeError:
         print(f"{' '*(indent+INDENT)}failed to decode page, returning")
         return
+    
     if not info.lang.startswith("en"):
         print(f"{' '*(indent+INDENT)}language is not English, returning")
         return
-    if not Indexed.objects.all().filter(url=parsed.geturl()).exists():
+    
+    if "noindex" in info.robots_directives:
+        print(f"{' '*(indent+INDENT)}meta robots noindex, returning")
+        return
+
+    if info.canonical:
+        canonical = urllib.parse.urljoin(parsed.geturl(), info.canonical)
+        parsed = urllib.parse.urlparse(canonical)
+   
+    if not Indexed.objects.all().filter(url=canonical).exists():
         Indexed(
            url = parsed.geturl(), 
            desc = info.desc, 
@@ -137,28 +156,36 @@ def crawl(url, orig, depth, indent, first=True, prevpath=None):
            content = info.content,
            favicon = info.favicon,
         ).save()
-        print(f"{' '*(indent+INDENT)}new site {parsed.geturl()} added")
+        print(f"{' '*(indent+INDENT)}new site {canonical} added")
     else:
         page = Indexed.objects.get(url=parsed.geturl())
         page.rank += 1
-        if (page.title is None or page.title == parsed.geturl()) and info.title:
+        if (page.title is None or page.title == canonical) and info.title:
             page.title = info.title
-            print(f"{' '*(indent+INDENT)}site {parsed.geturl()} title added")
+            print(f"{' '*(indent+INDENT)}site {canonical} title added")
         if page.favicon is None and info.favicon:
             if is_relative(info.favicon):
-                page.favicon = urllib.parse.urljoin(get_parent_url(parsed.geturl()), info.favicon)
+                page.favicon = urllib.parse.urljoin(
+                    get_parent_url(parsed.geturl()), info.favicon
+                )
             else:
                 page.favicon = info.favicon
-            print(f"{' '*(indent+INDENT)}site {parsed.geturl()} favicon added")
+            print(
+                f"{' '*(indent+INDENT)}site {parsed.geturl()} favicon added"
+            )
         page.save()
         print(f"{' '*(indent+INDENT)}site {parsed.geturl()} rank++")
         if not first:
             return
     prev = None
-    for x in info.links:
-        crawl(x, parsed.geturl(), depth + 1, indent + INDENT, False, prev)
-        prev = x
-    #time.sleep(random.randint(2, 5))
+    if "nofollow" not in info.robots_directives:
+        for x in info.links:
+            crawl(
+                x, parsed.geturl(), depth + 1, indent + INDENT, False, prev
+            )
+            prev = x
+    else:
+        print(f"{' '*(indent+INDENT)}nofollow in meta robots, returning")
 
 # helpers
 def get_parent_url(url):
@@ -204,102 +231,120 @@ def getinfo(url, text, is_root=False):
 # a single class
 class Parser(html.parser.HTMLParser):
     def __init__(self, url):
-        # initialize the superclass
         super().__init__()
         
-        # used by getinfo():
-        # --- the description
+        # the description
         self.desc = ""
-        # --- the keywords
+        # the keywords
         self.keywds = ""
-        # --- the title
+        # the title
         self.title = url
-        # --- the links
+        # the links
         self.links = []
-        # --- the content
+        # the content
         self.content = ""
-        # --- the language
+        # the language
         self.lang = "en"
-        # --- the favicon
+        # the favicon
         self.favicon = None
+        # robots directives
+        self.robots_directives = []
+        # canonical URL
+        self.canonical = None
         
-        # used only by Parser itself (that's why they're mangled)
-        # --- used to check if the next time handle_data() is called, the previous tag was a <title>.
+        # used to check if the next time handle_data() is 
+        # called, the previous tag was a <title>.
         self.__next_data_is_title = False
-        # --- stores the last tag handle_starttag() encountered
+        # stores the last tag handle_starttag() encountered
         self.__last_tag = ""
     
     def handle_starttag(self, tag, attr):
-        # convert the attributes to a dict (so that we can use [...] and .get(...)) 
-        # they are normally in a list of tuples of form [(attr, value), (attr, value), ...]
+        # convert the attributes to a dict
         attr = dict(attr)
         
-        # is it (the element) a link (an <a>)?
-        if tag.upper() == "A":
-            
-            # if there is a <a href="..."> attribute (where the link points) and it is not downloadable
-            if attr.get("href") is not None and attr.get("download", "false") == "false":
+        match tag.upper():
+            # is it (the element) a link (an <a>)?
+            case "A":
                 
-                # add it to the list of links
-                self.links.append(attr["href"])
-        
-        # well, is it a <meta> then (stuff for search engines)?
-        elif tag.upper() == "META":
-            
-            # if there is a <meta name="..."> attribute
-            if attr.get("name") is not None:
-                
-                #    <meta name="keywords" content="...">
-                # or <meta name="Keywords" content="...">
-                # or <meta name="og:keywords" content="...">
-                # meaning: the keywords that are associated with this page
-                if attr["name"].upper().removeprefix("OG:") == "KEYWORDS":
+                # if there is a <a href="..."> attribute 
+                # (where the link points) and it is not downloadable
+                if "href" in attr and attr.get("download", "false") == "false":
                     
-                    # append the <meta content="..."> attribute to the keywords already there
-                    self.keywds += attr["content"]
+                    # add it to the list of links
+                    self.links.append(attr["href"])
+            
+            # well, is it a <meta> then (stuff for search engines)?
+            case "META":
                 
-                #    <meta name="description" content="...">
-                # or <meta name="Description" content="...">
-                # or <meta name="og:description" content="...">
-                # meaning: the description of the page
-                elif attr["name"].upper().removeprefix("OG:") == "DESCRIPTION":
+                # if there is a <meta name="..."> attribute
+                if "name" in attr:
+                    match attr["name"].upper().removeprefix("OG:"):
                     
-                    # if there isn't a description already
-                    if self.desc == "":
+                        #    <meta name="keywords" content="...">
+                        # or <meta name="Keywords" content="...">
+                        # or <meta name="og:keywords" content="...">
+                        # meaning: the keywords that are associated with 
+                        # this page
+                        case "KEYWORDS":
+                            
+                            # append the <meta content="..."> attribute to the 
+                            # keywords already there
+                            self.keywds += attr["content"]
                         
-                        # set it to the <meta content="..."> attribute
-                        self.desc = attr["content"]
-        
-        # is it the <link> element (favicons etc.)?
-        elif tag.upper() == "LINK":
+                        #    <meta name="description" content="...">
+                        # or <meta name="Description" content="...">
+                        # or <meta name="og:description" content="...">
+                        # meaning: the description of the page
+                        case "DESCRIPTION":
+                            
+                            # if there isn't a description already
+                            if self.desc == "":
+                                
+                                # set it to the <meta content="..."> attribute
+                                self.desc = attr["content"]
+
+                        case "ROBOTS":
+                            # e.g. <meta name="robots" content="noindex,nofollow">
+                            directives = attr.get("content", "").lower().split(",")
+                            self.robots_directives = [d.strip() for d in directives]
             
-            # if there is a <link rel> and <link href> attr
-            if attr.get("rel") is not None and attr.get("href") is not None:
+            # is it the <link> element (favicons etc.)?
+            case "LINK":
                 
-                # if the rel="icon" (favicon)
-                if attr["rel"] == "icon":
+                # if there is a <link rel> and <link href> attr
+                if "rel" in attr and "href" in attr:
+                    match attr["rel"].lower():
+                        
+                        # if the rel="icon" (favicon)
+                        case "icon":
+                            
+                            # save the favicon URL
+                            self.favicon = attr["href"]
+
+                        # if the rel="canonical" (canonical URL)
+                        case "canonical":
+                            
+                            # save the canonical URL
+                            self.canonical = attr["href"]
+            
+            # is it the title of the page (the <title> element)?
+            case "TITLE":
+                
+                # pass it to handle_data() then as a page title
+                self.__next_data_is_title = True
+            
+            # is it the root element?
+            case "HTML":
+                
+                # if there is a lang attr
+                if "lang" in attr:
                     
-                    # save the favicon URL
-                    self.favicon = attr["href"]
-        
-        # is it the title of the page (the <title> element)?
-        elif tag.upper() == "TITLE":
+                    # set the language
+                    self.lang = attr["lang"]
             
-            # pass it to handle_data() then as a page title
-            self.__next_data_is_title = True
-        
-        # is it the root element?
-        elif tag.upper() == "HTML":
-            
-            # if there is a lang attr
-            if attr.get("lang") is not None:
-                
-                # set the language
-                self.lang = attr["lang"]
-        
-        # otherwise, just pass it to handle_data()
-        else:
-            self.__last_tag = tag
+            # otherwise, just pass it to handle_data()
+            case _:
+                self.__last_tag = tag
     
     def handle_data(self, data):
         
@@ -310,7 +355,8 @@ class Parser(html.parser.HTMLParser):
             self.__next_data_is_title = False
             self.title = data
         
-        # if handle_starttag() has just passed a random element, and we have not been told to ignore it
+        # if handle_starttag() has just passed a random element,
+        # and we have not been told to ignore it
         elif self.__last_tag.upper() not in IGNORETAGS:
             
             # if the content length is <= 500

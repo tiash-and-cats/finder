@@ -74,6 +74,57 @@ You will notice that no pages have been indexed. You can do one of two things:
   ```
   to load some indexed pages that I (`tiash-and-cats`) have done the hard work of running the crawler to crawl. :)
 
+### SSL / HTTPS
+
+Finder can serve traffic securely over HTTPS without needing an external reverse proxy.  
+The runner (`Makefile_run.py`) has built‑in support for SSL/TLS.
+
+Firstly, you will need to get a certificate and private key.
+
+#### The gigantic rabbit hole of despair that is SSL certificates
+
+You'll need to figure things out on your own if you're deploying, but for development, you can luckily just use [`mkcert`](https://github.com/FiloSottile/mkcert):
+
+``` sh
+mkcert localhost 127.0.0.1 ::1
+```
+
+This will create `localhost+2.pem` (the certificate) and `localhost+2-key.pem` (the private key).
+
+``` {note}
+Be sure to run `mkcert -install` first!
+```
+
+``` {warning}
+DO NOT EVER REVEAL YOUR PRIVATE KEY!
+```
+
+Or OpenSSL:
+
+``` sh
+openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost-key.pem -out localhost-cert.pem -days 365 -subj "/CN=localhost"
+```
+
+This will create `localhost-cert.pem` (the certificate) and `localhost-key.pem` (the private key).
+
+``` {warning}
+`mkcert` certs are trusted only on your machine. Self‑signed OpenSSL certs will trigger browser warnings unless you add them to your trust store.
+```
+
+#### Running the server with SSL/TLS
+
+Now, you can do:
+
+``` sh
+make SSL_CERTFILE=<cert.pem> SSL_KEYFILE=<key.pem>
+```
+
+and it will automatically bind to `https://localhost/`. It should work now.
+
+#### Production
+
+For public servers, use a real CA‑issued certificate (e.g. Let’s Encrypt). Many hosting providers automatically handle TLS termination for you. In that case, you can run Finder in plain HTTP mode and let the platform manage HTTPS. If you’re self‑hosting (e.g. on a laptop or bare VPS), you’ll need to obtain and renew certificates manually.
+
 ## Architecture
 
 ### Finder

@@ -20,4 +20,4 @@ bare
 *.tmp
 *.log
 .DS_Store
-Thumbs.db
+Thumbs.db*.pem 

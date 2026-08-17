@@ -19,10 +19,10 @@ import os
 import logging
 import http
 import httpx
-import asyncio
 import traceback
 import textwrap
 import threading
+import math
 import time
 import platform
 import aiofiles
@@ -35,6 +35,8 @@ from asgiref.wsgi import WsgiToAsgi
 
 import finder_buildinfo
 from status import Status, create_app as create_status_app
+
+import asyncio
 
 NO_COLOR = bool(os.environ.get("NO_COLOR") or not sys.stdout.isatty())
 
@@ -92,15 +94,15 @@ class ColorFormatter(logging.Formatter):
 
 handler = logging.StreamHandler()
 handler.setFormatter(ColorFormatter())
-logging.basicConfig(level=logging.WARNING, handlers=[handler])
+logging.basicConfig(handlers=[handler])
 logging.captureWarnings(True)
 
 logger = logging.getLogger("make")
 
 @(lambda x: x())
-def parse_log_level():
+def parse_log_level():    
     # parse LOGGING_LEVEL
-    log_str = os.environ.get("LOGGING_LEVEL", "INFO")
+    log_str = os.environ.get("LOGGING_LEVEL", "")
     
     log_levels = {
         "make": "INFO",
@@ -116,13 +118,44 @@ def parse_log_level():
         if log_str == "RESET": 
             # special case: RESET, resets all loggers to defaults
             log_levels = {}
+        elif not log_str: pass
         else:
             # legacy format for 'make' only:
             log_levels["make"] = log_str.strip()
 
     for logger_name, level_val in log_levels.items():
+        if logger_name == "*":
+            logging.basicConfig(level=level_val)
+            continue
+            
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.getLevelName(level_val))
+    
+USE_ASYNCIO_LOOP = bool(os.environ.get("USE_ASYNCIO_LOOP"))
+
+if not USE_ASYNCIO_LOOP:
+    try:
+        match os.name:
+            case "nt":
+                import winloop as loop
+                logger.debug("Using winloop")
+            case "posix":
+                import uvloop as loop
+                logger.debug("Using uvloop")
+            case name:
+                import asyncio as loop
+                logger.warning(
+                    f"Unknown OS {name!r}, using asyncio for safety"
+                )
+    except ModuleNotFoundError as e:
+        import asyncio as loop
+        logger.error(f"Couldn't import winloop/uvloop ({e}), using asyncio")
+else:
+    import asyncio as loop
+    logger.info("USE_ASYNCIO_LOOP is set, forcing asyncio")
+
+SSL_KEYFILE = os.environ.get("SSL_KEYFILE")
+SSL_CERTFILE = os.environ.get("SSL_CERTFILE")
 
 class ReverseProxy:
     """
@@ -421,12 +454,6 @@ class ReverseProxy:
               app.
 
         All other requests default to the Finder Django backend.
-        
-        NOTE: This method sends special messages of type
-        NOTE: "finder.<thing>". These are intercepted by __call__'s custom
-        NOTE: send function. Documentation can be found in __call__'s
-        NOTE: docstring. Of course, it is a compliant ASGI app as it checks
-        NOTE: scope["extensions"] before sending those messages.
         """
         # Pass non-HTTP operational events directly down to child apps
         if scope["type"] != "http":
@@ -544,9 +571,13 @@ class ReverseProxy:
 
         svc = "Uncategorized"
         exc = None
+        status_code = None
+        status_line = None
 
         async def isend(message):
-            nonlocal svc, exc
+            if scope["type"] != "http": return await send(message)
+            
+            nonlocal svc, exc, status_code, status_line
 
             if message["type"].startswith("finder."):
                 match message["type"]:
@@ -558,10 +589,8 @@ class ReverseProxy:
 
             if message["type"] == "http.response.start":
                 status_code = message.get("status", 200)
-                status_line = f"{status_code} {http.HTTPStatus(status_code)\
-                                               .phrase}"
-
-                self.status.service_request(svc, status_line)
+                status_line = f"{status_code} {
+                              http.HTTPStatus(status_code).phrase}"
 
                 via_string = f"HTTP/{scope.get('http_version', '1.1')} " \
                              f"Finderservices-Orchestration-{
@@ -572,22 +601,31 @@ class ReverseProxy:
                 headers.append((b"via", via_string.encode("latin1")))
                 message["headers"] = headers
 
-                log = f"{scope["method"]} {scope.get('path', '')} {
-                      status_line!r}"
-
-                if status_code < 400:
-                    logger.info(log, exc_info=exc)
-                elif status_code < 500:
-                    logger.warning(log, exc_info=exc)
-                else:
-                    logger.error(log, exc_info=exc)
-
             await send(message)
 
+        start_time = time.perf_counter()
         try:
-            return await self.main_asgi(scope, receive, isend)
+            await self.main_asgi(scope, receive, isend)
         except Exception as e:
-            return await self.error_asgi(scope, receive, isend, e)
+            await self.error_asgi(scope, receive, isend, e)
+        time_taken = time.perf_counter() - start_time 
+        time_taken_ms = time_taken * 1000
+        
+        if status_line is None:
+            status_code = 500
+            status_line = "500 Internal Server Error"
+
+        self.status.service_request(svc, status_line)
+        
+        log = f"{scope["method"]} {scope.get('path', '')} {
+              status_line!r} in {time_taken_ms:.4f}ms"
+
+        if status_code < 400:
+            logger.info(log, exc_info=exc)
+        elif status_code < 500:
+            logger.warning(log, exc_info=exc)
+        else:
+            logger.error(log, exc_info=exc)
 
     async def __aexit__(self, *_):
         """
@@ -614,10 +652,16 @@ async def main():
     logging.getLogger('uvicorn').setLevel(logging.INFO)
 
     async with ReverseProxy() as app:
-        port = int(os.environ.get("PORT", 80))
+        proto = {True: "https", False: "http"}[
+            bool(SSL_KEYFILE and SSL_CERTFILE)
+        ]
+        
+        port = int(
+            os.environ.get("PORT") or {"http": "80", "https": "443"}[proto]
+        )
 
         print()
-        print(f"Listening on http://localhost:{port}")
+        print(f"Listening on {proto}://localhost:{port}")
         print(__doc__.split("\n", 2)[-1])
 
         config = uvicorn.Config(
@@ -625,7 +669,8 @@ async def main():
             host="127.0.0.1" if platform.system() == "Windows" else "0.0.0.0",
             port=port,
             log_config=None,
-            loop="auto"
+            ssl_keyfile=SSL_KEYFILE,
+            ssl_certfile=SSL_CERTFILE,
         )
         server = uvicorn.Server(config)
 
@@ -633,6 +678,6 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        loop.run(main())
     except KeyboardInterrupt:
         logger.info("Interrupted: Gracefully exiting...")

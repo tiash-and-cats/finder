@@ -187,7 +187,9 @@ def parse_makefile(filepath="Makefile"):
         for line in f:
             line = line.strip()
             if line.startswith("#"):
-                line = line.lstrip("#").strip()
+                line = line.removeprefix("#")
+                if line.startswith(" "):
+                    line = line[1:]
                 
                 if line.startswith(":variables:"):
                     variables.extend(
@@ -198,7 +200,8 @@ def parse_makefile(filepath="Makefile"):
             elif match := target_pattern.match(line):
                 name = match.group(1)
                 targets[name] = (
-                    "\n".join(comments).strip() or "(no description)", variables
+                    "\n".join(comments).strip() or "(no description)",
+                    sorted(variables)
                 )
                 comments = []
                 variables = []
