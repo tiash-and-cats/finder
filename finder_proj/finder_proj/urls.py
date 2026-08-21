@@ -27,4 +27,10 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns.append(path('admin/', admin.site.urls))
+    from debug_toolbar.toolbar import debug_toolbar_urls
+    
+    urlpatterns.extend([
+        path('admin/', admin.site.urls),
+        path("__reload__/", include("django_browser_reload.urls")),
+        *debug_toolbar_urls(),
+    ])

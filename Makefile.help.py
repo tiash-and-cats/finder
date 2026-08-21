@@ -1,52 +1,57 @@
 r"""
 Finder Makefile help interface.
 
-(!!) Please don't run this script directly. Use 'make help' instead.
+.. warning::
+   Please don't run this script directly. Use 'make help' instead.
 
-PROTIP: If you just want to know how to use it, not how it works, see
-`'make help ON=help'`.
+.. tip::
+   If you just want to know how to use it, not how it works, see
+   ``make help ON=help``.
 
 This script implements a help system that extracts documentation directly
 from the Makefile itself. The Makefile is annotated so that comments placed
 immediately above a target definition are treated as that target's description.
 This is modeled after Python docstrings.
 
-Lines beginning with `':variables:'` declare which variables the target accepts.
+Syntax:
+=======
 
-Lines beginning with `'(!!)'` are warnings and are emboldened. The `'(!!)'` is
+Lines beginning with ``':variables:'`` declare which variables the target accepts.
+
+Lines beginning with ``'(!!)'`` are warnings and are emboldened. The ``'(!!)'`` is
 underlined, too.
 
-Lines beginning with `'PROTIP:'` are tips and the `'PROTIP:'` keyword is
+Lines beginning with ``'PROTIP:'`` are tips and the ``'PROTIP:'`` keyword is
 emboldened and underlined.
 
-Lines beginning with `'NOTE:'` are notes and the `'NOTE:'` keyword is
+Lines beginning with ``'NOTE:'`` are notes and the ``'NOTE:'`` keyword is
 emboldened and underlined.
 
-\`...\` segments and lines beginning with `':'` are considered code and
+``\`...\``` segments and lines beginning with ``':'`` are considered code and
 emboldened.
 
 Blank lines reset the comment/variable buffer so that only contiguous
 annotations are associated with the next target.
 
-Here's an example:
+Here's an example::
 
-:    NAME=world
-:    
-:    # This rule prints a greeting.
-:    #
-:    # Use the variable NAME to choose who to greet. It defaults to 'world'.
-:    #
-:    # :variables: NAME
-:    greet:
-:        echo Hello $(NAME)!
+    NAME=world
+    
+    # This rule prints a greeting.
+    #
+    # Use the variable NAME to choose who to greet. It defaults to 'world'.
+    #
+    # :variables: NAME
+    greet:
+        echo Hello $(NAME)!
 
-This is rendered as:
+This is rendered as::
 
-:    make greet [NAME=...]
-:    
-:        This rule prints a greeting.
-:        
-:        Use the variable NAME to choose who to greet. It defaults to 'world'.
+    make greet [NAME=...]
+    
+        This rule prints a greeting.
+        
+        Use the variable NAME to choose who to greet. It defaults to 'world'.
 
 It uses Pydoc to get help on Python scripts.
 """
@@ -225,12 +230,16 @@ def main():
         if target:
             if target in targets:
                 desc, vars_ = targets[target]
-                p.heading = f"make {target}"
+                p.heading = f"{target}(Makefile)"
                 print(ident(ddent(f"""\
-                    {b(f"make {target}")} {" ".join(map(lambda x: b("[") + 
-                                           bu(x) + b("=...]"), vars_))}""")))
+                    {b(f"make {target}")} {b("[") + bu("+h") + b("=]")} {
+                        " ".join(map(lambda x: b("[") + 
+                        bu(x) + b("=...]"), vars_))
+                    }""")))
                 print()
                 print(ident(desc, 2))
+                print()
+                print(ident(f"Use {b("'+h='")} to get this help.", 2))
             elif target.endswith(".py"):
                 if "env" not in sys.executable:
                     with p.escape():
@@ -262,20 +271,24 @@ def main():
             else:
                 raise FileNotFoundError(f"Topic '{target}' not found.")
         else:
-            p.heading = "Makefile"
-            print(ident(b("make [target]")))
+            p.heading = "intro(Makefile)"
+            print(ident(b("make [target] [") + bu("+h") + b("=]")))
             print(ident(ddent(f"""
                 Finder Makefile. This is just a handy automation Makefile to save you from
                 running a bunch of commands.
+                
+                {bu("(!!)")} {b("DO NOT use -j with this Makefile.")}
 
-                {u("Available rules:")}"""), 2))
+                {bu("Available rules:")}"""), 2))
             for t, (desc, _) in targets.items():
                 print(ident(f"- {b(t.ljust(25))} {desc.split("\n")[0]}", 3))
-            print(ident(ddent("""
-                Run 'make help ON=<target_name>' for focused info.
-                Run 'make help ON=<python_file.py>' for info about the specified script.
-                Run 'make help ON=help' for more info about this help interface.
-                Run 'make help ON=web' for help online.
+            print(ident(ddent(f"""
+                Run {b("'make help ON=<rule>'")} for focused info.
+                Run {b("'make help ON=<script.py>'")} for info about the specified script.
+                Run {b("'make help ON=help'")} for more info about this help interface.
+                Run {b("'make help ON=web'")} for help online.
+                
+                You can also use the shorthand syntax: {b("'make <rule> +h='")}.
 
                 NOTE: Some rules need a Makefile.secret, so it's a good idea to create one
                 immediately. You can either write your own or interactively create one using

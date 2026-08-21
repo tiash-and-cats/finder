@@ -46,15 +46,20 @@ INSTALLED_APPS = [
     "search",
     "api",
     "django.contrib.humanize",
+    "servestatic",
 ]
 
 if DEBUG:
     # Install some more apps in dev
     INSTALLED_APPS.extend([
         'django.contrib.admin',
+        "django_browser_reload",
+        "django_watchfiles",
+        "debug_toolbar",
     ])
 
 MIDDLEWARE = [
+    "django_http_compression.middleware.HttpCompressionMiddleware",
     'django.middleware.security.SecurityMiddleware',
     "servestatic.middleware.ServeStaticMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -64,6 +69,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    # Install more middleware in dev
+    MIDDLEWARE[1:1] = [
+        "django_browser_reload.middleware.BrowserReloadMiddleware",
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ]
 
 ROOT_URLCONF = 'finder_proj.urls'
 
@@ -138,3 +150,5 @@ STATIC_ROOT = BASE_DIR / 'staticprod'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+INTERNAL_IPS = ["127.0.0.1"]

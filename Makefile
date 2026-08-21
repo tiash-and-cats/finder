@@ -1,21 +1,11 @@
-# Run by default if no target is given. Synonym of 'make run'.
-default: run
+.DELETE_ON_ERROR:
+.DEFAULT_GOAL := run
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN=./env/Scripts
 else
 VENV_BIN=./env/bin
 endif
-
-SYS_PYTHON=python
-
-DOCKER_IMAGE_NAME=finder
-
-PORT=
-LOGGING_LEVEL=
-USE_ASYNCIO_LOOP=
-
-HELP=
 
 ifneq ($(wildcard Makefile.secret),)
 include Makefile.secret
@@ -27,9 +17,10 @@ $(warning No Makefile.secret detected. You can choose to create one using the Ma
 endif
 
 # Shorthand help syntax
-ifneq ($(HELP),)
++h=sentinel
+ifeq ($(+h),)
 %:
-	@$(MAKE) help "ON=$(MAKECMDGOALS)" HELP=
+	@$(MAKE) help "ON=$(MAKECMDGOALS)" --no-print-directory +h=sentinel
 else
 
 # Installs dependencies.
@@ -56,6 +47,7 @@ else
 # `find4u/web` and runs `'npm install'`.
 #
 # :variables: SYS_PYTHON
+SYS_PYTHON=python
 deps:
 	@if [ ! -d env ]; then \
 		$(SYS_PYTHON) -m venv env; \
@@ -147,8 +139,8 @@ build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 # to force the standard `asyncio` loop, regardless of OS. You don't need to
 # understand this to run it, don't worry.
 #
-# (!!) "0" is considered truthy by Python, so `'USE_ASYNCIO_LOOP=0'` will
-# (!!) force `asyncio`. Use `'USE_ASYNCIO_LOOP='`.
+# (!!) "0" is considered truthy by Python, so 'USE_ASYNCIO_LOOP=0' will
+# (!!) force asyncio. Use 'USE_ASYNCIO_LOOP='.
 #
 # NOTE: Setting `'USE_ASYNCIO_LOOP='` will not "force uvloop/winloop". It
 # NOTE: simply means that `asyncio` will not be forced.
@@ -167,6 +159,9 @@ build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 #     Possible values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
 #
 # :variables: LOGGING_LEVEL PORT USE_ASYNCIO_LOOP SSL_KEYFILE SSL_CERTFILE
+PORT=
+LOGGING_LEVEL=
+USE_ASYNCIO_LOOP=
 run: deps
 	@if [ ! -f Makefile.secret ]; then \
 		echo "No Makefile.secret found: run make Makefile.secret"; \
@@ -187,6 +182,7 @@ Makefile.secret: | deps
 # Use the `DOCKER_IMAGE_NAME` variable to set the image name (defaults to `finder`).
 #
 # :variables: DOCKER_IMAGE_NAME
+DOCKER_IMAGE_NAME=finder
 docker-build:
 	docker build -t $(DOCKER_IMAGE_NAME) .
 
@@ -203,9 +199,10 @@ docker-run:
 
 # Show help.
 #
-# The simplest usage of this rule is `'make <rule>|web HELP=1'`.
-# That is equivalent to `'make help <rule>|web'`. To pass variables
-# or get help on Python files you must use `'make help ON=...'`.
+# The simplest usage of this rule is using the `'+h='` flag on another
+# rule. For example:
+#
+#     make run +h=
 #
 # Run `'make help ON=<rule>'` to get help on the Makefile rule <rule>.
 # Run `'make help ON=<script.py>'` to get help on a Python script.
@@ -222,8 +219,9 @@ docker-run:
 # For technical details, see `'make help ON=Makefile.help.py'`.
 #
 # :variables: ON SYS_PYTHON
+ON=
 help:
-	@$(SYS_PYTHON) Makefile.help.py $(ON)
+	@$(SYS_PYTHON) Makefile.help.py $(ON) && exit
 
 # Freeze dependencies.
 #
