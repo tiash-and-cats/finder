@@ -1,4 +1,4 @@
-/env
+/env*
 /finder_proj/db.sqlite3
 /finder_proj/staticprod
 /finder_proj/crawl.log

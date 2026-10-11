@@ -50,23 +50,29 @@ else
 SYS_PYTHON=python
 deps:
 	@if [ ! -d env ]; then \
+		echo creating Python venv; \
 		$(SYS_PYTHON) -m venv env; \
+		echo installing Python deps; \
 		$(VENV_BIN)/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu; \
 		$(VENV_BIN)/pip install $(if $(filter Windows_NT,$(OS)),winloop,uvloop); \
 	fi
 	@if [ ! -d node_modules ]; then \
+		echo installing JavaScript docs deps; \
 		npm init --init-type module -y; \
 		npm install --no-package-lock zod commander; \
 	fi
 	@if [ ! -d find4u/cli/node_modules ] && [ -d find4u/cli/ink-app/src ]; then \
+		echo installing Find4U CLI JavaScript deps; \
 		cd find4u/cli; \
 		npm install; \
 	fi
 	@if [ ! -d find4u/cli/ink-app/node_modules ] && [ -d find4u/cli/ink-app/src ]; then \
+		echo installing more Find4U CLI JavaScript deps; \
 		cd find4u/cli/ink-app; \
 		npm install; \
 	fi
 	@if [ ! -d find4u/web/node_modules ]; then \
+		echo installing Find4U Web deps; \
 		cd find4u/web; \
 		npm install; \
 	fi
@@ -146,8 +152,8 @@ build: deps build-finder-db build-find4u build-docs build-finder_buildinfo
 # NOTE: simply means that `asyncio` will not be forced.
 #
 # SSL_KEYFILE and SSL_CERTFILE are for configuring SSL/TLS. Both are optional,
-# but if one is present, the other should be too. SSL_KEYFILE should be set
-# to the SSL key and SSL_CERTFILE should be set to the SSL certificate.
+# but if one is present, the other must be too. SSL_KEYFILE should be set
+# to the SSL private key and SSL_CERTFILE should be set to the SSL certificate.
 #
 # An alternative approach would be to keep the core server insecure and
 # put a simple HTTPS-to-HTTP proxy in front; in fact, this is what the
@@ -229,7 +235,7 @@ help:
 # winloop or uvloop in the output, and depending on the next contributor's
 # system, it could break. Use this instead.
 freeze:
-	pip freeze --exclude winloop --exclude uvloop > requirements.txt
+	$(VENV_BIN)/pip freeze --exclude winloop --exclude uvloop > requirements.txt
 
 .PHONY: deps run finder find4u help docker-build docker-run
 endif

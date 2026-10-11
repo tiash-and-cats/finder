@@ -351,7 +351,8 @@ class ReverseProxy:
         logger.debug("Next.js ready")
 
         # Set terminal title
-        print("\x1b]0;make (Finder) - ReverseProxy\x1b\\", end="", flush=True)
+        print(f"\x1b]0;make run (Finder ReverseProxy; {
+              finder_buildinfo.BUILDCOMMIT})\x1b\\", end="", flush=True)
 
         logger.debug("ReverseProxy ready")
         return self
